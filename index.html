@@ -1,0 +1,2270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IMPS Web — ICS-206 Builder</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#1f2937;--muted:#6b7280;--border:#d1d5db;--accent:#1f4e78}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+main{max-width:1050px;margin:0 auto;padding:24px}
+h1{margin:0 0 6px} h2{margin:0 0 8px} h3{margin:0}
+.small{color:var(--muted);font-size:13px}.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:600}input,select,textarea{width:100%;margin-top:5px;border:1px solid var(--border);border-radius:8px;padding:9px;font:inherit;background:white}
+button{border:1px solid var(--border);background:white;border-radius:8px;padding:8px 12px;cursor:pointer;font:inherit}
+button.primary{background:var(--accent);color:white;border-color:var(--accent)}button.danger{color:#8b1e1e}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}.row{display:flex;gap:8px;align-items:center}
+.subcard{border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;background:#fafafa}
+pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;padding:14px;border-radius:10px;max-height:420px;overflow:auto}
+.badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:3px 8px;font-size:12px;margin-right:5px}
+.hidden{display:none}.section-label{font-size:13px;font-weight:700;margin-top:10px;margin-bottom:4px}
+
+.branch-tone-1{background:#d8ecff;border:2px solid #4f8fc7}
+.branch-tone-2{background:#dff3d8;border:2px solid #66a653}
+.branch-tone-3{background:#fff0c7;border:2px solid #c99a28}
+.branch-tone-4{background:#eadcff;border:2px solid #8c63b8}
+.branch-tone-5{background:#d2f1ee;border:2px solid #3d9d93}
+.branch-tone-6{background:#ffdcdc;border:2px solid #c46767}
+.division-header{border-radius:8px;padding:8px 10px;font-weight:700;margin:-4px -4px 10px -4px}
+.branch-tone-1 .division-header{background:#8fc5f0}
+.branch-tone-2 .division-header{background:#9fd38e}
+.branch-tone-3 .division-header{background:#e8c667}
+.branch-tone-4 .division-header{background:#c4a0df}
+.branch-tone-5 .division-header{background:#86cfc7}
+.branch-tone-6 .division-header{background:#e6a0a0}
+
+
+/* IMPS section visual hierarchy */
+.section-incident{border-left:6px solid #3b82f6;background:#f3f8ff}
+.section-ground{border-left:6px solid #16a34a;background:#f2fbf4}
+.section-air{border-left:6px solid #0f766e;background:#f1fbfa}
+.section-hospital{border-left:6px solid #dc2626;background:#fff5f5}
+.section-branch{border-left:6px solid #7c3aed;background:#f8f5ff}
+.section-location{border-left:6px solid #d97706;background:#fff9ef}
+.section-finalize{border-left:6px solid #475569;background:#f7f8fa}
+.section-review{border-left:6px solid #6b7280;background:#f8f8f8}
+
+.section-incident > h2,.section-incident .toolbar h2{color:#1d4ed8}
+.section-ground > h2,.section-ground .toolbar h2{color:#15803d}
+.section-air > h2,.section-air .toolbar h2{color:#0f766e}
+.section-hospital > h2,.section-hospital .toolbar h2{color:#b91c1c}
+.section-branch > h2,.section-branch .toolbar h2{color:#6d28d9}
+.section-location > h2,.section-location .toolbar h2{color:#b45309}
+.section-finalize > h2,.section-finalize .toolbar h2{color:#334155}
+.section-review > h2,.section-review .toolbar h2{color:#4b5563}
+
+.section-incident,.section-ground,.section-air,.section-hospital,.section-branch,
+.section-location,.section-finalize,.section-review{
+  box-shadow:0 2px 8px rgba(15,23,42,.06);
+}
+
+
+.save-state{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:600;background:#fff;white-space:nowrap}
+.save-state::before{content:"";width:9px;height:9px;border-radius:50%;background:#9ca3af}
+.save-state.saved{border-color:#86b996;background:#f1f8f3;color:#24613a}
+.save-state.saved::before{background:#2f855a}
+.save-state.unsaved{border-color:#d6aa62;background:#fff8eb;color:#7a5315}
+.save-state.unsaved::before{background:#d28a19}
+.save-state.saving{border-color:#8aa7d6;background:#f1f6ff;color:#315b99}
+.save-state.saving::before{background:#4d78bd}
+
+
+.import-review{border-left:6px solid #2563eb;background:#f5f9ff}
+.import-review-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.import-review-stat{border:1px solid var(--border);border-radius:8px;background:white;padding:9px}
+.import-review-stat b{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+.import-warning{padding:7px 9px;border:1px solid #e8c47b;background:#fff9e8;border-radius:7px;margin-top:6px;font-size:13px}
+@media(max-width:720px){.import-review-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.validation-error{outline:3px solid #c62828!important;outline-offset:2px;background:#fff4f4!important}.validation-error-label{color:#a61b1b!important;font-weight:700}.validation-modal-backdrop.hidden{display:none!important}.validation-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px}.validation-modal{max-width:560px;width:100%;background:white;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.28);padding:20px}.validation-modal h2{margin:0 0 8px}.validation-modal ul{margin:10px 0 16px;padding-left:22px}
+.place-search{position:relative}.place-suggestions{position:absolute;z-index:60;left:0;right:0;top:100%;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(15,23,42,.15);max-height:250px;overflow:auto;margin-top:3px}.place-suggestions.hidden{display:none}.place-suggestion{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eef0f2;border-radius:0;padding:9px 10px;background:#fff}.place-suggestion:last-child{border-bottom:0}.place-suggestion small{display:block;color:var(--muted);margin-top:2px}.mapping-status{padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid var(--border)}
+
+.app-tabs{position:sticky;top:0;z-index:18;display:flex;gap:6px;overflow-x:auto;padding:8px 0;background:#f5f7fa;border-bottom:1px solid var(--border)}
+.app-tab{white-space:nowrap;border:1px solid var(--border);background:white;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer}
+.app-tab.active{background:#1f2937;color:white;border-color:#1f2937}
+.app-tab[data-warning="1"]{box-shadow:inset 0 -3px 0 #c62828}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.settings-row{display:flex;justify-content:flex-end;margin:8px 0}
+
+.calc-status.error{color:#b91c1c;font-weight:700}
+.calc-status.success{color:#166534;font-weight:700}
+
+.google-review-source{margin:8px 0;padding:8px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa;font-size:12px}
+.google-review-grid{display:grid;grid-template-columns:36px 150px 1fr 1fr;gap:6px;align-items:start;font-size:13px;margin-top:12px}
+.google-review-grid .hdr{font-weight:700;background:#f3f4f6;padding:6px}
+.google-review-grid .cell{padding:6px;border-bottom:1px solid #e5e7eb;overflow-wrap:anywhere}
+.google-review-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+
+.pdf-preview-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(17,24,39,.72);display:flex;align-items:center;justify-content:center;padding:18px}
+.pdf-preview-backdrop.hidden{display:none}
+.pdf-preview-shell{width:99vw;height:98vh;background:#fff;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+.pdf-preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #d1d5db;background:#f8fafc}
+.pdf-preview-toolbar h2{margin:0;font-size:18px}
+.pdf-preview-frame{flex:1;width:100%;border:0;background:#525659;overflow:auto;padding:16px;box-sizing:border-box}
+#docxPreviewContent{width:100%;height:100%;min-height:78vh;margin:0 auto}
+#docxPreviewContent .docx-wrapper{background:#525659!important;padding:0!important}
+#docxPreviewContent section.docx{box-shadow:0 2px 10px rgba(0,0,0,.45);margin:0 auto 18px auto!important}
+#docxPreviewContent .imps-pdf-preview{width:100%;height:100%;min-height:78vh;border:0;background:#525659;display:block}
+
+
+.google-review-diff{background:#fff1f2!important;border-left:4px solid #dc2626!important}
+.google-review-match{background:#f0fdf4!important}
+.google-review-note{margin-top:8px;font-size:12px}
+.hospital-review-prompt{display:flex;width:100%;margin:8px 0 10px;border:2px solid #b45309;border-radius:8px;background:#facc15;color:#422006;box-shadow:0 1px 2px rgba(0,0,0,.08);overflow:hidden}
+.hospital-review-prompt.hidden{display:none}.hospital-review-prompt button{border:0;border-radius:0;margin:0;font-weight:800;font-size:14px;letter-spacing:.01em;cursor:pointer}
+.hospital-review-prompt [data-review-now]{flex:1;padding:10px 14px;background:#facc15;color:#422006;text-align:center}
+.hospital-review-prompt [data-review-now]:hover{background:#fde047}
+.hospital-review-prompt [data-review-dismiss]{flex:0 0 auto;padding:10px 16px;background:#fff7c2;color:#713f12;border-left:2px solid #b45309}
+.hospital-review-prompt [data-review-dismiss]:hover{background:#fef3a7}
+
+.modal-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-backdrop.hidden{display:none}
+.modal-card{width:min(100%,520px);background:#fff;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+
+</style>
+  <script type="module" crossorigin src="./assets/index-CUewl9xn.js"></script>
+</head>
+
+<body>
+  <div id="startupChoiceModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="startupChoiceTitle">
+    <div class="modal-card" style="max-width:520px">
+      <h2 id="startupChoiceTitle" style="margin-top:0">Welcome to IMPS Web</h2>
+      <p id="startupChoiceText">Choose how you want to begin.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+        <button type="button" id="startupOpenLast" class="primary" style="flex:1;min-width:200px">Open Last Incident</button>
+        <button type="button" id="startupOpenOther" style="flex:1;min-width:200px">Open Other Incident</button>
+        <button type="button" id="startupNewIncident" style="flex:1;min-width:200px">New Incident</button>
+      </div>
+    </div>
+  </div>
+
+<main>
+
+  <section id="appToolbar" class="card" style="border-top:5px solid #1f2937;background:#ffffff" style="position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.08)">
+    <div class="toolbar">
+      <div>
+        <h2 style="margin:0">IMPS Web v0.1.0</h2>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;font-style:italic">Created by Jeff Childers</div>
+      </div>
+      <div class="row">
+        <button type="button" id="appNew">New Incident</button>
+        <button type="button" id="appOpen">Open Another Incident</button>
+        <button type="button" id="appGenerateWord" class="primary">Generate Word Document</button>
+        <button type="button" id="appPreview206">Preview ICS-206</button>
+        <details id="moreMenu" style="position:relative">
+          <summary style="cursor:pointer;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#fff">More</summary>
+          <div style="position:absolute;right:0;top:46px;z-index:30;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:230px">
+            <button type="button" id="appImport206" style="width:100%;margin-bottom:6px" disabled title="Word import is not yet available in the browser edition">Import Word 206 (desktop edition only)</button>
+            <button type="button" id="appSaveAs" style="width:100%">Save Incident As…</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div id="currentIncidentBanner" style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0">
+      <div id="currentIncidentName" style="font-weight:800;font-size:17px">New unsaved incident</div>
+      <div id="currentIncidentPeriod" class="small" style="margin-top:2px"></div>
+      <div id="appFileStatus" class="small" style="margin-top:3px">Unsaved incident</div>
+    </div>
+    <div id="appStatus" class="small" style="margin-top:4px">Ready.</div>
+  </section>
+
+  <section class="card" style="border-left:6px solid #1f4e78;background:#f3f8ff">
+    <strong>Browser edition:</strong>
+    <span class="small" style="color:inherit">
+      Your incident is saved on this device and the Word ICS-206 is generated in this browser.
+      Download an incident backup regularly. Clearing this browser’s site data removes its local saved copy.
+      Address and route searches use IMPS online mapping services only when you use those features.
+    </span>
+  </section>
+
+  <section id="importReviewPanel" class="card import-review hidden">
+    <div class="toolbar">
+      <div>
+        <h2 style="margin:0">Review Imported ICS-206</h2>
+        <div id="importReviewSummary" class="small" style="margin-top:4px"></div>
+      </div>
+      <div class="row">
+        <button type="button" id="cancelImport206">Cancel Import</button>
+        <button type="button" id="loadImport206" class="primary">Load Into IMPS</button>
+      </div>
+    </div>
+    <div id="importReviewStats" class="import-review-grid"></div>
+    <div id="importReviewWarnings" style="margin-top:10px"></div>
+  </section>
+
+  
+
+  
+  <div class="settings-row"><button type="button" id="openMappingSettings">Settings</button></div>
+  <nav class="app-tabs" id="appTabs" aria-label="IMPS sections">
+    <button type="button" class="app-tab active" data-tab="incident">Incident</button>
+    <button type="button" class="app-tab" data-tab="ground">Ground Ambulances <span data-count-ground></span></button>
+    <button type="button" class="app-tab" data-tab="air">Air Ambulances <span data-count-air></span></button>
+    <button type="button" class="app-tab" data-tab="hospitals">Hospitals <span data-count-hospitals></span></button>
+    <button type="button" class="app-tab" data-tab="divisions">Divisions <span data-count-divisions></span></button>
+    <button type="button" class="app-tab" data-tab="locations">Locations <span data-count-locations></span></button>
+    <button type="button" class="app-tab" data-tab="signatures">Signatures</button>
+  </nav>
+
+
+  <section class="card tab-panel active" data-tab-panel="incident">
+    <h2>Incident Setup</h2>
+    <div class="grid">
+      <label>Incident Name<input id="incidentName"></label>
+      <label>Operational Period Start Date<input id="opStartDate" type="date"></label>
+      <label>Operational Period Start Time (Optional)<input id="opStartTime" type="text" inputmode="numeric" maxlength="4" placeholder="0600"></label>
+      <label>Operational Period End Date<input id="opEndDate" type="date"></label>
+      <label>Operational Period End Time (Optional)<input id="opEndTime" type="text" inputmode="numeric" maxlength="4" placeholder="1800"></label>
+      <label class="full">Transport Time Calculation Origin
+        <input id="originName" placeholder="Location hospital transport times will be calculated from, e.g. ICP or Base Camp">
+      </label>
+      <label class="full">Origin Address / Place
+        <div class="place-search">
+          <input id="originAddress" placeholder="Start typing an address, ICP, base camp, or place name" autocomplete="off">
+          <div id="originSuggestions" class="place-suggestions hidden"></div>
+        </div>
+        <span class="small">When Google is configured, suggestions appear as you type. Selecting a result saves its coordinates locally with the incident.</span>
+      </label>
+      <div class="full row">
+        <button type="button" id="selectOriginGoogleMap">Select Point on Google Map</button>
+        <span id="originMapStatus" class="small"></span>
+      </div>
+      <label class="full">ICS-206 Logo / Graphic
+        <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp">
+        <span class="small">Optional. Floats in the upper-left of the header without changing the MEDICAL PLAN heading position.</span>
+      </label>
+      <div class="full row" id="logoPreviewRow" style="display:none">
+        <img id="logoPreview" alt="Selected logo" style="max-height:64px;max-width:180px;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">
+        <button type="button" id="removeLogo">Remove Logo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card section-ground tab-panel" data-tab-panel="ground">
+    <div><h2>Ground Ambulances</h2><div class="small">Add one or more resources.</div></div>
+    <div id="groundList"></div>
+    <div class="toolbar" style="margin-top:12px"><span></span><button class="primary" id="btnAddGround">Add Ground Ambulance</button></div>
+  </section>
+
+  <section class="card section-air tab-panel" data-tab-panel="air">
+    <div><h2>Air Ambulances</h2><div class="small">Add one or more resources.</div></div>
+    <div id="airList"></div>
+    <div class="toolbar" style="margin-top:12px"><span></span><button class="primary" id="btnAddAir">Add Air Ambulance</button></div>
+  </section>
+
+  <section class="card section-hospital tab-panel" data-tab-panel="hospitals">
+    <div><h2>Hospitals</h2></div>
+    <div id="hospitalList"></div>
+    <div class="toolbar" style="margin-top:12px">
+      <span></span>
+      <div class="row"><button id="btnCalcAllHospitals">Calculate All Hospitals</button><button class="primary" id="btnAddHospital">Add Hospital</button></div>
+    </div>
+  </section>
+
+  <section class="card tab-panel" data-tab-panel="divisions">
+    <h2>Divisions and Branches</h2>
+    <div class="small">If Branches are not used, no Branch header will be generated on the ICS-206. Each Branch is visually color-coded in the form, and each Division header shows the Branch name plus Division/Group name. Use ↑ Up / ↓ Down to control final 206 order.</div>
+    <div class="row" style="margin:12px 0">
+      <label style="font-weight:normal"><input style="width:auto;margin:0 6px 0 0" type="radio" name="branchesUsed" value="no" checked> No Branches</label>
+      <label style="font-weight:normal"><input style="width:auto;margin:0 6px 0 0" type="radio" name="branchesUsed" value="yes"> Use Branches</label>
+    </div>
+
+    <div id="noBranchMode">
+      <h3>Divisions</h3>
+      <div id="divisionList"></div>
+      <div class="toolbar" style="margin-top:12px"><span></span><button class="primary" id="btnAddDivision">Add Division</button></div>
+    </div>
+
+    <div id="branchMode" class="hidden">
+      <h3>Branches</h3>
+      <div id="branchList"></div>
+      <div class="toolbar" style="margin-top:12px"><span></span><button class="primary" id="btnAddBranch">Add Branch</button></div>
+    </div>
+  </section>
+
+  <section class="card section-location tab-panel" data-tab-panel="locations">
+    <div><h2>Locations</h2></div>
+    <div id="locationList"></div>
+    <div class="toolbar" style="margin-top:12px"><span></span><button class="primary" id="btnAddLocation">Add Location</button></div>
+  </section>
+
+  
+  <section class="card section-finalize tab-panel" data-tab-panel="signatures" id="signatureSection">
+    <h2>Sign ICS-206 (optional)</h2>
+    <div class="small">
+      Signatures are optional. Signatures entered here are placed directly into the generated Word ICS-206. Date/time fills automatically and remains editable.
+    </div>
+
+    <div class="grid" style="margin-top:12px">
+      <label class="full" style="display:none">Suggested Output File Name
+        <input id="outputBaseName" type="text" placeholder="ICS206_Incident_Name">
+        <span class="small">This is the suggested name. Generate Word Document saves the editable DOCX directly and does not require PDF Preview or LibreOffice. Preview remains optional.</span>
+      </label>
+
+      <div>
+        <label>Medical Unit Leader Signature</label>
+        <canvas id="medlSignature" width="520" height="150" style="width:100%;max-width:520px;height:150px;border:1px solid var(--border);border-radius:8px;background:white;touch-action:none"></canvas>
+        <div class="row" style="margin-top:6px">
+          <button type="button" id="clearMedlSignature">Clear MEDL Signature</button>
+        </div>
+      </div>
+
+      <label>MEDL Date / Time
+        <input id="medlSignatureTime" type="text" placeholder="08/22/2026 1030 hrs">
+      </label>
+
+      <div>
+        <label>Safety Officer Signature</label>
+        <canvas id="safetySignature" width="520" height="150" style="width:100%;max-width:520px;height:150px;border:1px solid var(--border);border-radius:8px;background:white;touch-action:none"></canvas>
+        <div class="row" style="margin-top:6px">
+          <button type="button" id="clearSafetySignature">Clear Safety Signature</button>
+        </div>
+      </div>
+
+      <label>Safety Officer Date / Time
+        <input id="safetySignatureTime" type="text" placeholder="08/22/2026 1100 hrs">
+      </label>
+    </div>
+
+    <div class="small" style="margin-top:10px">
+      Either signature may be left blank. The generated Word ICS-206 may contain either or both signatures.
+    </div>
+  </section>
+
+
+  <section class="card section-review" style="display:none">
+    <div class="toolbar">
+      <div>
+        <h2>Review / Save</h2>
+        <div class="small">Review the structured data, then save it as JSON for the ICS-206 generation test. Prepared By is a form header; signature handling will come later from the MEDL profile.</div>
+      </div>
+      <div class="row">
+        <button id="btnReview">Review Data</button>
+        <button class="primary" id="btnSave">Save JSON</button>
+        <button id="btnLoad">Load JSON</button>
+        <input id="loadFile" type="file" accept=".json,application/json" class="hidden">
+      </div>
+    </div>
+    <div id="summary" style="margin-top:12px"></div>
+    <pre id="review" class="hidden"></pre>
+  </section>
+
+  <section class="card" id="bottomActions" style="margin-top:18px;border-top:5px solid #1f2937;background:#ffffff">
+    <div class="toolbar">
+      <div>
+        <h2 style="margin:0">Incident Actions</h2>
+      </div>
+      <div class="row">
+        <span id="bottomSaveState" class="save-state unsaved" role="status" aria-live="polite">Unsaved incident</span>
+        <button type="button" id="bottomSave" class="primary">Save</button>
+        <button type="button" id="bottomSaveAs">Save As</button>
+        <button type="button" id="bottomGenerateWord" class="primary">Generate Word Document</button>
+        <button type="button" id="bottomPreview206">Preview ICS-206</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+
+<script>
+window.addEventListener('error', function(e) {
+  try {
+    const s = document.getElementById('appStatus');
+    if (s) s.textContent = 'Startup error: ' + (e.message || 'Unknown JavaScript error');
+  } catch (_) {}
+});
+window.addEventListener('unhandledrejection', function(e) {
+  try {
+    const s = document.getElementById('appStatus');
+    const reason = e.reason && (e.reason.message || String(e.reason));
+    if (s) s.textContent = 'Startup error: ' + (reason || 'Unhandled promise rejection');
+  } catch (_) {}
+});
+</script>
+<div id="googleMapPicker" class="validation-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="googleMapPickerTitle">
+  <div class="validation-modal" style="max-width:820px">
+    <div class="toolbar">
+      <h2 id="googleMapPickerTitle" style="margin:0">Select Transport Origin</h2>
+      <div class="row">
+        <button type="button" id="useMyLocation">Use My Location</button>
+        <button type="button" id="cancelGoogleMapPicker">Cancel</button>
+        <button type="button" id="closeGoogleMapPicker" aria-label="Close map picker" title="Close">✕</button>
+      </div>
+    </div>
+    <p class="small">Use My Location only centers the map near your device's approximate location. It does not select the transport origin. Pan/zoom and click the exact ICP, camp, helibase, or other origin, then choose Use Selected Point.</p>
+    <div id="googleMapCanvas" style="height:480px;border:1px solid var(--border);border-radius:10px;background:#eef2f7"></div>
+    <div class="toolbar" style="margin-top:10px">
+      <span id="googleMapPickerStatus" class="small">Click a point on the map.</span>
+      <button type="button" id="useGoogleMapPoint" class="primary" disabled>Use Selected Point</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="mappingSettingsModal" class="validation-modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="validation-modal" style="max-width:720px">
+    <div class="toolbar"><h2 style="margin:0">Settings</h2><button type="button" id="closeMappingSettings">✕</button></div>
+    <details class="card" id="mappingSettings">
+      <summary style="cursor:pointer;font-weight:700">Online Mapping</summary>
+      <div style="margin-top:12px">
+        <span id="googleMappingStatus" class="small mapping-status">Checking IMPS online mapping services…</span>
+        <div class="small" style="margin-top:8px">Places and routed ground transport use the IMPS cloud service. No Google API key setup is required on this computer.</div>
+      </div>
+    </details>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const counts={ground:0,air:0,hospital:0,division:0,branch:0,location:0};
+  let logoDataUrl='';
+  let logoFileName='';
+  function setLogo(dataUrl='',fileName=''){
+    logoDataUrl=dataUrl||'';
+    logoFileName=fileName||'';
+    const row=$('logoPreviewRow'), img=$('logoPreview');
+    if(logoDataUrl){ img.src=logoDataUrl; row.style.display='flex'; }
+    else { img.removeAttribute('src'); row.style.display='none'; $('logoFile').value=''; }
+  }
+
+
+  function field(label,name,type='text',placeholder=''){
+    return `<label>${label}<input data-field="${name}" type="${type}" placeholder="${placeholder}"></label>`;
+  }
+  function selectField(label,name,opts){
+    return `<label>${label}<select data-field="${name}"><option value="">Select…</option>${opts.map(x=>`<option>${x}</option>`).join('')}</select></label>`;
+  }
+  function removeButton(){ return `<button type="button" class="danger" data-remove>Remove</button>`; }
+  function moveButtons(){ return `<span class="row"><button type="button" data-move-up title="Move item up">↑</button><button type="button" data-move-down title="Move item down">↓</button></span>`; }
+  function divisionMoveButtons(){ return `<span class="row"><button type="button" data-move-up title="Move the entire Division up">Division ↑</button><button type="button" data-move-down title="Move the entire Division down">Division ↓</button></span>`; }
+  function branchMoveButtons(){ return `<span class="row"><button type="button" data-move-up>Branch ↑</button><button type="button" data-move-down>Branch ↓</button></span>`; }
+  function wireRemove(el){ el.querySelector('[data-remove]')?.addEventListener('click',()=>el.remove()); }
+  function wireMove(el){
+    el.querySelector('[data-move-up]')?.addEventListener('click',()=>{
+      const prev=el.previousElementSibling;
+      if(prev) el.parentElement.insertBefore(el,prev);
+    });
+    el.querySelector('[data-move-down]')?.addEventListener('click',()=>{
+      const next=el.nextElementSibling;
+      if(next) el.parentElement.insertBefore(next,el);
+    });
+  }
+  function value(root,name){ return root.querySelector(`[data-field="${name}"]`)?.value?.trim()||''; }
+  function fillFields(root,data){
+    Object.entries(data||{}).forEach(([k,v])=>{
+      if(k==='responders'||k==='divisions')return;
+      const e=root.querySelector(`[data-field="${k}"]`);
+      if(e)e.value=v??'';
+    });
+  }
+  function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+  function addressAutocompleteField(label='Complete Address'){
+    return `<label class="full">${escapeHtml(label)}
+      <div class="place-search">
+        <input data-field="address" data-address-autocomplete placeholder="Start typing a physical address" autocomplete="off">
+        <div data-address-suggestions class="place-suggestions hidden"></div>
+      </div>
+      <span class="small">Google address suggestions appear when online. Manual entry remains available offline.</span>
+    </label>`;
+  }
+
+
+  const PLACE_CACHE_KEY='imps.placeCache.v1';
+  let googleConfigured=false;
+  const placeSessions=new WeakMap();
+
+  function getPlaceCache(){
+    try{return JSON.parse(localStorage.getItem(PLACE_CACHE_KEY)||'[]')}catch{return []}
+  }
+  function savePlaceCache(place){
+    if(!place?.placeId)return;
+    const all=getPlaceCache().filter(x=>x.placeId!==place.placeId);
+    all.unshift({...place,updatedAt:new Date().toISOString()});
+    localStorage.setItem(PLACE_CACHE_KEY,JSON.stringify(all.slice(0,250)));
+  }
+  function cachedPlaceMatches(q){
+    const t=String(q||'').toLowerCase().trim();
+    if(t.length<2)return [];
+    return getPlaceCache().filter(x=>`${x.name||''} ${x.address||''}`.toLowerCase().includes(t)).slice(0,5);
+  }
+  function newSessionToken(){return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}
+  async function refreshGoogleStatus(){
+    const el=$('googleMappingStatus');
+    try{
+      googleConfigured=!!(await window.IMPSGoogle?.status?.());
+      if(el)el.textContent=googleConfigured?'IMPS online mapping available — Places and Routes ready.':'IMPS online mapping unavailable — offline/manual workflow remains available.';
+    }catch{googleConfigured=false;if(el)el.textContent='IMPS online mapping unavailable.'}
+  }
+  function normalizePlaceDetails(raw){
+    const d=typeof raw==='string'?JSON.parse(raw):raw;
+    return {
+      placeId:d.placeId||d.id||'',
+      name:d.name||d.displayName?.text||'',
+      address:d.address||d.formattedAddress||'',
+      phone:d.phone||d.nationalPhoneNumber||'',
+      lat:Number(d.lat ?? d.location?.latitude),
+      lon:Number(d.lon ?? d.location?.longitude),
+      googleMapsUri:d.googleMapsUri||'',
+      source:d.source||'Google'
+    };
+  }
+  async function fetchGoogleSuggestions(input,sessionToken){
+    if(!googleConfigured || !window.IMPSGoogle?.autocomplete)return [];
+    const raw=await window.IMPSGoogle.autocomplete(input,sessionToken);
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
+    return (data.suggestions||[]).map(x=>({
+      placeId:x.placeId||'',
+      text:x.text||x.mainText||x.placeId||'',
+      name:x.mainText||x.text||'',
+      address:x.secondaryText||'',
+      source:x.source||'Google'
+    })).filter(x=>x.placeId);
+  }
+  function renderPlaceSuggestions(box,items,onChoose){
+    box.innerHTML='';
+    if(!items.length){box.classList.add('hidden');return}
+    items.forEach(item=>{
+      const b=document.createElement('button');b.type='button';b.className='place-suggestion';
+      b.innerHTML=`${escapeHtml(item.name||item.text||'Place')}<small>${escapeHtml(item.address||item.source||'')}</small>`;
+      b.addEventListener('click',()=>{box.classList.add('hidden');onChoose(item)});
+      box.appendChild(b);
+    });
+    box.classList.remove('hidden');
+  }
+  function wirePlaceAutocomplete(input,box,onSelected,{savedOnlyFirst=true}={}){
+    let timer=null;let activeToken=newSessionToken();
+    placeSessions.set(input,activeToken);
+    input.addEventListener('input',()=>{
+      clearTimeout(timer);
+      const q=input.value.trim();
+      if(q.length<2){box.classList.add('hidden');return}
+      timer=setTimeout(async()=>{
+        const local=cachedPlaceMatches(q).map(x=>({...x,source:'Saved in IMPS'}));
+        let google=[];
+        if(q.length>=3){
+          try{google=await fetchGoogleSuggestions(q,activeToken)}catch(err){console.warn(err)}
+        }
+        const merged=[...local,...google.filter(g=>!local.some(l=>l.placeId===g.placeId))].slice(0,8);
+        renderPlaceSuggestions(box,merged,async item=>{
+          try{
+            let place=item;
+            if(item.source==='Google'){
+              const raw=await window.IMPSGoogle.placeDetails(item.placeId);
+              place=normalizePlaceDetails(raw);savePlaceCache(place);
+            }
+            onSelected(place);
+            activeToken=newSessionToken();placeSessions.set(input,activeToken);
+          }catch(err){console.error(err);window.IMPSShowNotice?.(`Could not load place details: ${err.message||err}`)}
+        });
+      },350);
+    });
+    input.addEventListener('blur',()=>setTimeout(()=>box.classList.add('hidden'),180));
+  }
+  function wireAddressAutocomplete(el){
+    const input=el.querySelector('[data-address-autocomplete]');
+    const box=el.querySelector('[data-address-suggestions]');
+    if(!input || !box)return;
+    wirePlaceAutocomplete(input,box,place=>{
+      const address=String(place?.address||place?.name||'').trim();
+      if(address){
+        input.value=address;
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    });
+  }
+  function googleMapsSearchUrl(query){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`}
+
+  let googleMapPromise=null,originPickerMap=null,originPickerMarker=null,originPickerPoint=null;
+  async function ensureGoogleMapsJs(){
+    if(window.google?.maps)return window.google.maps;
+    if(googleMapPromise)return googleMapPromise;
+    googleMapPromise=(async()=>{
+      const key=await window.IMPSGoogle?.clientKey?.();
+      if(!key)throw new Error('Google Maps API key is not configured.');
+      await new Promise((resolve,reject)=>{
+        const cb=`impsGoogleMapsReady_${Date.now()}`;
+        window[cb]=()=>{delete window[cb];resolve()};
+        const script=document.createElement('script');
+        script.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&callback=${cb}`;
+        script.async=true;script.onerror=()=>reject(new Error('Could not load Google Maps JavaScript API.'));
+        document.head.appendChild(script);
+      });
+      return window.google.maps;
+    })();
+    try{return await googleMapPromise}catch(err){googleMapPromise=null;throw err}
+  }
+  function closeOriginMapPicker(){
+    $('googleMapPicker').classList.add('hidden');
+  }
+
+  async function centerMapOnMyLocation(){
+    const status=$('googleMapPickerStatus');
+    if(!navigator.geolocation){
+      status.textContent='This device/browser does not provide location services.';
+      return;
+    }
+    status.textContent='Getting approximate device location…';
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        const lat=pos.coords.latitude,lon=pos.coords.longitude;
+        if(originPickerMap){
+          originPickerMap.setCenter({lat,lng:lon});
+          originPickerMap.setZoom(13);
+          status.textContent=`Map centered near your location (accuracy about ${Math.round(pos.coords.accuracy||0)} m). Click the exact transport origin.`;
+        }else{
+          status.textContent='Map is not ready yet.';
+        }
+      },
+      err=>{
+        const msg = err.code===1 ? 'Location permission was not granted.' :
+                    err.code===2 ? 'Your location could not be determined.' :
+                    err.code===3 ? 'Location request timed out.' :
+                    (err.message || 'Location is unavailable.');
+        status.textContent=`${msg} You can still pan/zoom the map manually.`;
+      },
+      {enableHighAccuracy:false,timeout:8000,maximumAge:300000}
+    );
+  }
+
+  async function openOriginMapPicker(){
+    const modal=$('googleMapPicker'),status=$('googleMapPickerStatus'),use=$('useGoogleMapPoint');
+    modal.classList.remove('hidden');
+    status.textContent='Loading Google Map…';
+    use.disabled=true;
+    originPickerPoint=null;
+    try{
+      const maps=await ensureGoogleMapsJs();
+      let lat=Number($('originAddress').dataset.placeLat),lon=Number($('originAddress').dataset.placeLon),zoom=13;
+      const hasSavedCoords=Number.isFinite(lat)&&Number.isFinite(lon);
+      if(!hasSavedCoords){lat=39.5;lon=-98.35;zoom=4}
+      originPickerMap=new maps.Map($('googleMapCanvas'),{
+        center:{lat, lng:lon},
+        zoom,
+        mapTypeControl:true,
+        streetViewControl:false,
+        fullscreenControl:false,
+        scrollwheel:true,
+        gestureHandling:'greedy'
+      });
+      if(originPickerMarker){originPickerMarker.setMap(null);originPickerMarker=null;}
+      if(hasSavedCoords){
+        originPickerPoint={lat,lon};
+        originPickerMarker=new maps.Marker({position:{lat,lng:lon},map:originPickerMap});
+        use.disabled=false;
+        status.textContent='Existing transport origin shown. Click a new point to replace it.';
+      } else {
+        const q=$('originAddress').value.trim();
+        if(q){
+          try{
+            const geocoder=new maps.Geocoder();
+            const resp=await geocoder.geocode({address:q});
+            const loc=resp?.results?.[0]?.geometry?.location;
+            if(loc){
+              lat=loc.lat();lon=loc.lng();zoom=13;
+              originPickerMap.setCenter({lat,lng:lon});
+              originPickerMap.setZoom(zoom);
+              originPickerPoint={lat,lon};
+              originPickerMarker=new maps.Marker({position:{lat,lng:lon},map:originPickerMap});
+              use.disabled=false;
+              status.textContent='Origin address located. Click a new point to replace it, or use the existing point.';
+            }
+          }catch(err){console.warn('Origin address geocode failed',err)}
+        }
+      }
+      originPickerMap.addListener('click',ev=>{
+        const p=ev.latLng;
+        originPickerPoint={lat:p.lat(),lon:p.lng()};
+        if(originPickerMarker)originPickerMarker.setMap(null);
+        originPickerMarker=new maps.Marker({
+          position:{lat:originPickerPoint.lat,lng:originPickerPoint.lon},
+          map:originPickerMap
+        });
+        status.textContent=`Selected ${originPickerPoint.lat.toFixed(6)}, ${originPickerPoint.lon.toFixed(6)}`;
+        use.disabled=false;
+      });
+      status.textContent='Click a point on the map, or use My Location to move closer to your area.';
+    }catch(err){
+      status.textContent=`Map unavailable: ${err.message||err}`; status.classList?.add('error'); window.IMPSShowNotice?.(`Map unavailable: ${err.message||err}`);
+    }
+  }
+
+  function createGround(data={}){
+    const n=++counts.ground, el=document.createElement('div'); el.className='subcard'; el.dataset.ground=n;
+    el.innerHTML=`<div class="toolbar"><h3>Ground Ambulance ${n}</h3>${removeButton()}</div><div class="grid">
+      ${field('Name','name')}${field('Phone','phone')}${addressAutocompleteField('Complete Address')}
+      ${field('EMS Frequency','frequency')}${selectField('ALS','als',['Yes','No'])}
+    </div>`;
+    wireRemove(el); $('groundList').appendChild(el); fillFields(el,{
+      name:data.name||'', phone:data.phone||'', address:data.address||'',
+      frequency:data.emsFrequency ?? data.frequency ?? '',
+      als:data.als||''
+    });
+    wireAddressAutocomplete(el);
+  }
+
+  function createAir(data={}){
+    const n=++counts.air, el=document.createElement('div'); el.className='subcard'; el.dataset.air=n;
+    el.innerHTML=`<div class="toolbar"><h3>Air Ambulance ${n}</h3>${removeButton()}</div><div class="grid">
+      ${field('Name','name')}${field('Phone','phone')}<label class="full">Type of Aircraft & Capability<input data-field="capability"></label>
+    </div>`;
+    wireRemove(el); $('airList').appendChild(el); fillFields(el,{
+      name:data.name||'', phone:data.phone||'',
+      capability:data.aircraftCapability ?? data.capability ?? ''
+    });
+  }
+
+
+  let googleHospitalReviewState=null;
+  let googleHospitalRecalcTarget=null;
+  let transportOverridePromptState=null;
+
+  function hospitalManualFields(el){
+    try{return new Set(JSON.parse(el.dataset.manualFields||'[]'))}catch{return new Set()}
+  }
+  function setHospitalManualField(el,name){
+    const fields=hospitalManualFields(el);fields.add(name);
+    el.dataset.manualFields=JSON.stringify([...fields]);
+    if(el.dataset.recordSource==='Imported') el.dataset.recordSource='Imported + Manual';
+    else if(el.dataset.recordSource==='Google') el.dataset.recordSource='Manual';
+    const sourceLabel=el.querySelector('[data-record-source]');
+    if(sourceLabel){
+      if(el.dataset.recordSource==='Imported + Manual'){
+        sourceLabel.textContent='Imported ICS-206 • modified';
+        sourceLabel.className='google-review-source';
+      }else if(el.dataset.recordSource==='Manual'){
+        sourceLabel.textContent='Manual';
+        sourceLabel.className='small';
+      }
+    }
+  }
+
+  function hospitalCurrentValues(el){
+    return {
+      name:value(el,'name'),
+      address:value(el,'address'),
+      phone:value(el,'phone'),
+      lat:value(el,'latitudeDDM'),
+      lon:value(el,'longitudeDDM')
+    };
+  }
+
+  function applyGoogleHospitalValues(el,place,selected=null){
+    const use=(field)=>!selected || selected.has(field);
+    const set=(field,val)=>{
+      const input=el.querySelector(`[data-field="${field}"]`);
+      if(input && val!==undefined && val!==null && String(val)!=='') input.value=String(val);
+    };
+    if(use('name')) set('name',place.name||'');
+    if(use('address')) set('address',place.address||'');
+    if(use('phone') && place.phone) set('phone',place.phone);
+
+    el.dataset.googlePlaceId=place.placeId||el.dataset.googlePlaceId||'';
+    el.dataset.googleLat=Number.isFinite(place.lat)?String(place.lat):(el.dataset.googleLat||'');
+    el.dataset.googleLon=Number.isFinite(place.lon)?String(place.lon):(el.dataset.googleLon||'');
+    el.dataset.placeSource='Google';
+
+    if(use('gps') && Number.isFinite(place.lat) && Number.isFinite(place.lon)){
+      el.dataset.calculatedLat=decimalToDDM(place.lat,true);
+      el.dataset.calculatedLon=decimalToDDM(place.lon,false);
+      const gpsToggle=el.querySelector('[data-field="gpsOverrideEnabled"]');
+      if(!gpsToggle?.checked){
+        set('latitudeDDM',el.dataset.calculatedLat);
+        set('longitudeDDM',el.dataset.calculatedLon);
+      }
+    }
+    el.dataset.recordSource = el.dataset.recordSource?.startsWith('Imported') ? 'Imported + Manual' : 'Google';
+    const label=el.querySelector('[data-record-source]');
+    if(label){
+      label.textContent=el.dataset.recordSource.startsWith('Imported')
+        ? 'Imported ICS-206 • reviewed'
+        : 'Google';
+      label.className=el.dataset.recordSource.startsWith('Imported')?'google-review-source':'small';
+    }
+    const status=el.querySelector('[data-calc-status]');
+    if(status) status.textContent='Google information applied. Existing transport times remain unchanged until you choose Calculate.';
+  }
+
+  function markHospitalGoogleReviewCompleted(el){
+    if(!el)return;
+    el.dataset.googleReviewCompleted='true';
+    el.dataset.googleReviewPromptDismissed='false';
+    el.querySelector('[data-import-review-prompt]')?.classList.add('hidden');
+    el.querySelector('[data-secondary-review]')?.classList.remove('hidden');
+  }
+
+  function dismissHospitalGoogleReviewPrompt(el){
+    if(!el)return;
+    el.dataset.googleReviewPromptDismissed='true';
+    el.querySelector('[data-import-review-prompt]')?.classList.add('hidden');
+    el.querySelector('[data-secondary-review]')?.classList.remove('hidden');
+    const status=el.querySelector('[data-calc-status]');
+    if(status){
+      status.textContent='';
+      status.classList.remove('error');
+    }
+  }
+
+  function openGoogleHospitalReview(el,place){
+    const modal=$('googleHospitalReviewModal');
+    const grid=$('googleHospitalReviewGrid');
+    const current=hospitalCurrentValues(el);
+    const google={
+      name:place.name||'',
+      address:place.address||'',
+      phone:place.phone||'',
+      lat:Number.isFinite(place.lat)?decimalToDDM(place.lat,true):'',
+      lon:Number.isFinite(place.lon)?decimalToDDM(place.lon,false):''
+    };
+    googleHospitalReviewState={el,place};
+    grid.innerHTML='';
+
+    const header=['','Field','Current IMPS value','Google value'];
+    header.forEach(x=>{const d=document.createElement('div');d.className='hdr';d.textContent=x;grid.appendChild(d)});
+
+    const rows=[
+      ['name','Name',current.name,google.name],
+      ['address','Address',current.address,google.address],
+      ['phone','Primary Phone',current.phone,google.phone],
+      ['gps','GPS',`${current.lat||''}${current.lat&&current.lon?' / ':''}${current.lon||''}`,`${google.lat||''}${google.lat&&google.lon?' / ':''}${google.lon||''}`]
+    ];
+    const manual=hospitalManualFields(el);
+    const norm=v=>String(v||'').trim().replace(/\s+/g,' ').toLowerCase();
+    rows.forEach(([key,label,cur,gval])=>{
+      const hasGoogle=!!String(gval||'').trim();
+      const differs=hasGoogle && norm(cur)!==norm(gval);
+      const wrap=document.createElement('div');wrap.className=`cell ${differs?'google-review-diff':'google-review-match'}`;
+      const cb=document.createElement('input');cb.type='checkbox';cb.dataset.googleReviewField=key;
+      // Google values are selected by default. The MEDL unchecks anything that
+      // should remain exactly as imported/manual.
+      cb.checked=hasGoogle;
+      cb.disabled=!hasGoogle;
+      wrap.appendChild(cb);grid.appendChild(wrap);
+
+      const cells=[
+        label + (differs ? ' — DIFFERENT' : ' — MATCHES'),
+        cur||'(blank)',
+        gval||'(not provided)'
+      ];
+      cells.forEach(val=>{
+        const d=document.createElement('div');
+        d.className=`cell ${differs?'google-review-diff':'google-review-match'}`;
+        d.textContent=val;
+        grid.appendChild(d);
+      });
+    });
+    $('googleHospitalReviewTitle').textContent=`Review Google information — ${place.name||value(el,'name')||'Hospital'}`;
+    modal.classList.remove('hidden');
+  }
+
+
+  let importedHospitalReviewQueue=[];
+  let importedHospitalReviewRunning=false;
+
+  async function reviewNextImportedHospital(){
+    if(!importedHospitalReviewQueue.length){
+      importedHospitalReviewRunning=false;
+      return;
+    }
+    const el=importedHospitalReviewQueue.shift();
+    if(!el || !document.body.contains(el)){
+      return reviewNextImportedHospital();
+    }
+
+    const status=el.querySelector('[data-calc-status]');
+    try{
+      if(status) status.textContent='Checking Google information for imported hospital…';
+      const place=await findGoogleHospitalCandidate(el);
+      openGoogleHospitalReview(el,place);
+      // The queue continues when Apply or Cancel is pressed.
+    }catch(err){
+      if(status){
+        status.textContent=`Google review unavailable: ${err.message||err}`;
+        status.classList.add('error');
+      }
+      window.IMPSShowNotice?.(`Google review could not be completed for ${value(el,'name')||'an imported hospital'}: ${err.message||err}`);
+      setTimeout(reviewNextImportedHospital,0);
+    }
+  }
+
+  function startImportedHospitalReview(){
+    importedHospitalReviewQueue=[...document.querySelectorAll('[data-hospital]')]
+      .filter(el=>String(el.dataset.recordSource||'').startsWith('Imported'));
+    if(!importedHospitalReviewQueue.length)return;
+    importedHospitalReviewRunning=true;
+    reviewNextImportedHospital();
+  }
+
+  async function findGoogleHospitalCandidate(el){
+    if(!googleConfigured || !window.IMPSGoogle?.autocomplete) throw new Error('IMPS online mapping is not available.');
+    const q=[value(el,'name'),value(el,'address')].filter(Boolean).join(' ');
+    if(!q.trim()) throw new Error('Enter a hospital name or address first.');
+    const token=newSessionToken();
+    const raw=await window.IMPSGoogle.autocomplete(q,token);
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
+    const suggestion=(data.suggestions||[])[0];
+    const placeId=suggestion?.placeId || suggestion?.placePrediction?.placeId;
+    if(!placeId) throw new Error('Google did not return a likely hospital match.');
+    const detailRaw=await window.IMPSGoogle.placeDetails(placeId);
+    return normalizePlaceDetails(detailRaw);
+  }
+
+  function createHospital(data={}){
+    const n=++counts.hospital, el=document.createElement('div'); el.className='subcard'; el.dataset.hospital=n;
+    el.innerHTML=`<div class="toolbar"><div><h3 style="margin:0">Hospital ${n}</h3><div data-record-source class="small"></div></div>${removeButton()}</div>
+    <div data-import-review-prompt class="hospital-review-prompt hidden">
+      <button type="button" data-review-now>⚠ REVIEW GOOGLE INFORMATION FOR THIS HOSPITAL</button>
+      <button type="button" data-review-dismiss>IGNORE</button>
+    </div>
+    <div class="grid">
+      <label class="full">Hospital Name
+        <div class="place-search">
+          <input data-field="name" data-hospital-search placeholder="Start typing a hospital or facility name" autocomplete="off">
+          <div data-place-suggestions class="place-suggestions hidden"></div>
+        </div>
+        <span class="small">Saved IMPS hospitals appear first; Google suggestions appear when online. Offline, this remains a normal text field.</span>
+      </label>${field('Primary Phone','phone')}${field('Second Phone (optional)','phone2')}${addressAutocompleteField('Complete Address')}
+      <label>Helipad
+        <select data-field="helipad" required>
+          <option value="">Select Yes or No</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </label>${field('Level of Care','level')}${field('VHF','vhf')}
+
+      <label class="full" style="font-weight:normal"><input data-field="gpsOverrideEnabled" type="checkbox" style="width:auto;margin:0 6px 0 0"> Override GPS coordinates</label>
+      <label>Latitude (DD° MM.MMM′)<input data-field="latitudeDDM" readonly placeholder="Calculated from address"></label>
+      <label>Longitude (DD° MM.MMM′)<input data-field="longitudeDDM" readonly placeholder="Calculated from address"></label>
+
+      <label class="full" style="font-weight:normal"><input data-field="groundOverrideEnabled" type="checkbox" style="width:auto;margin:0 6px 0 0"> Override ground transport time</label>
+      <label>Ground Transport Time<input data-field="groundTimeMin" readonly placeholder="Calculated routed driving time"></label>
+      <label class="full"><span class="small">When override is checked, enter the total transport time in minutes. The ICS-206 formats the value as hours/minutes automatically.</span></label>
+
+      <label class="full" style="font-weight:normal"><input data-field="airOverrideEnabled" type="checkbox" style="width:auto;margin:0 6px 0 0"> Override air transport time</label>
+      <label>Air Transport Time<input data-field="airTimeMin" readonly placeholder="Calculated straight-line time"></label>
+      <label class="full"><span class="small">When override is checked, enter the total air transport time in minutes. If Helipad is No, this field is automatically NA.</span></label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button type="button" data-calc-hospital>Calculate GPS & Transport Times</button>
+      <button type="button" data-review-google data-secondary-review>Review Google Info</button>
+      <span data-calc-status class="small"></span>
+    </div>`;
+    wireRemove(el); $('hospitalList').appendChild(el);
+    el.dataset.recordSource = data.recordSource || (data.importedRecord ? 'Imported' : (data.placeSource || data.dataSource || (data.googlePlaceId ? 'Google' : 'New')));
+    el.dataset.manualFields = JSON.stringify(Array.isArray(data.manualFields) ? data.manualFields : []);
+    el.dataset.googleReviewCompleted = data.googleReviewCompleted ? 'true' : 'false';
+    el.dataset.googleReviewPromptDismissed = data.googleReviewPromptDismissed ? 'true' : 'false';
+    const sourceLabel=el.querySelector('[data-record-source]');
+    const reviewPrompt=el.querySelector('[data-import-review-prompt]');
+    const secondaryReviewButton=el.querySelector('[data-secondary-review]');
+    const refreshGoogleReviewPrompt=()=>{
+      const imported=String(el.dataset.recordSource||'').startsWith('Imported');
+      const reviewed=el.dataset.googleReviewCompleted==='true';
+      const dismissed=el.dataset.googleReviewPromptDismissed==='true';
+      reviewPrompt?.classList.toggle('hidden',!(imported && !reviewed && !dismissed));
+      // The smaller manual review control always remains available.
+      secondaryReviewButton?.classList.remove('hidden');
+    };
+    const refreshSourceLabel=()=>{
+      const src=el.dataset.recordSource||'New';
+      if(src==='Imported'){
+        sourceLabel.textContent='Imported ICS-206';
+        sourceLabel.className='google-review-source';
+      }else if(src==='Imported + Manual'){
+        sourceLabel.textContent='Imported ICS-206 • modified';
+        sourceLabel.className='google-review-source';
+      }else if(src==='Google'){
+        sourceLabel.textContent='Google';
+        sourceLabel.className='small';
+      }else if(src==='Manual'){
+        sourceLabel.textContent='Manual';
+        sourceLabel.className='small';
+      }else{
+        sourceLabel.textContent='';
+        sourceLabel.className='small';
+      }
+    };
+    refreshSourceLabel();
+    refreshGoogleReviewPrompt();
+
+    const oldGpsOverride=Boolean(data.gpsOverrideEnabled || data.latitudeOverride || data.longitudeOverride);
+    const oldGroundOverride=Boolean(data.groundOverrideEnabled || data.groundTimeOverride || data.groundOverride);
+    const oldAirOverride=Boolean(data.airOverrideEnabled || data.airTimeOverride || data.airOverride);
+    const initialLat=data.finalLatitudeDDM || data.latitudeOverride || data.latitudeDDM || '';
+    const initialLon=data.finalLongitudeDDM || data.longitudeOverride || data.longitudeDDM || '';
+    const initialGround=data.finalGroundMin ?? data.groundTimeOverride ?? data.groundOverride ?? data.calculatedGroundMin ?? '';
+    const helipadValue=String(data.helipad||'').toLowerCase();
+    const initialAir=helipadValue==='no' ? 'NA' : (helipadValue==='yes' ? (data.finalAirMin ?? data.airTimeOverride ?? data.airOverride ?? data.calculatedAirMin ?? '') : '');
+
+    fillFields(el,{
+      name:data.name||'', phone:data.phone||'', phone2:data.phone2 ?? data.secondaryPhone ?? '', address:data.address||'',
+      helipad:data.helipad||'', level:data.levelOfCare ?? data.level ?? '', vhf:data.vhf||'',
+      latitudeDDM:initialLat, longitudeDDM:initialLon,
+      groundTimeMin:formatTravelTime(initialGround), airTimeMin:initialAir==='NA'?'NA':formatTravelTime(initialAir)
+    });
+    el.dataset.googlePlaceId=data.googlePlaceId||data.placeId||'';
+    el.dataset.googleLat=String(data.googleLat ?? data.placeLat ?? '');
+    el.dataset.googleLon=String(data.googleLon ?? data.placeLon ?? '');
+    el.dataset.placeSource=data.placeSource||data.dataSource||'';
+    el.querySelector('[data-field="gpsOverrideEnabled"]').checked=oldGpsOverride;
+    el.querySelector('[data-field="groundOverrideEnabled"]').checked=oldGroundOverride;
+    el.querySelector('[data-field="airOverrideEnabled"]').checked=oldAirOverride;
+
+    // Preserve calculated values separately so an override can be turned off without recalculating.
+    el.dataset.calculatedLat=data.calculatedLatitudeDDM || (!oldGpsOverride ? (data.latitudeDDM||'') : '') || '';
+    el.dataset.calculatedLon=data.calculatedLongitudeDDM || (!oldGpsOverride ? (data.longitudeDDM||'') : '') || '';
+    el.dataset.calculatedGround=String(data.calculatedGroundMin ?? (!oldGroundOverride ? initialGround : '') ?? '');
+    el.dataset.calculatedAir=String(data.calculatedAirMin ?? (!oldAirOverride && initialAir!=='NA' ? initialAir : '') ?? '');
+
+    const lat=el.querySelector('[data-field="latitudeDDM"]');
+    const lon=el.querySelector('[data-field="longitudeDDM"]');
+    const ground=el.querySelector('[data-field="groundTimeMin"]');
+    const air=el.querySelector('[data-field="airTimeMin"]');
+    const gpsToggle=el.querySelector('[data-field="gpsOverrideEnabled"]');
+    const groundToggle=el.querySelector('[data-field="groundOverrideEnabled"]');
+    const airToggle=el.querySelector('[data-field="airOverrideEnabled"]');
+    const calcStatus=el.querySelector('[data-calc-status]');
+    if(oldGpsOverride){ lat.dataset.overrideInitialized='1'; lon.dataset.overrideInitialized='1'; }
+    if(oldGroundOverride){ ground.dataset.overrideInitialized='1'; }
+    if(oldAirOverride){ air.dataset.overrideInitialized='1'; }
+
+    const setOverrideMode=(toggle,fields,calculatedValues)=>{
+      fields.forEach((f,i)=>{
+        f.readOnly=!toggle.checked;
+        if(toggle.checked){
+          if(!f.dataset.overrideInitialized){ f.value=''; f.dataset.overrideInitialized='1'; }
+        }else{
+          delete f.dataset.overrideInitialized;
+          f.value=calculatedValues[i]||'';
+        }
+      });
+    };
+    const syncGpsMode=()=>setOverrideMode(gpsToggle,[lat,lon],[el.dataset.calculatedLat,el.dataset.calculatedLon]);
+    const syncGroundMode=()=>{ setOverrideMode(groundToggle,[ground],[formatTravelTime(el.dataset.calculatedGround)]); if(!groundToggle.checked) ground.value=formatTravelTime(el.dataset.calculatedGround); };
+    const syncAirMode=()=>{
+      if(value(el,'helipad')==='No'){
+        airToggle.checked=false; airToggle.disabled=true; air.readOnly=true; air.value='NA';
+      }else{
+        airToggle.disabled=false;
+        setOverrideMode(airToggle,[air],[formatTravelTime(el.dataset.calculatedAir)]); if(!airToggle.checked) air.value=formatTravelTime(el.dataset.calculatedAir);
+      }
+    };
+
+    gpsToggle.addEventListener('change',()=>{ syncGpsMode(); calcStatus.textContent=gpsToggle.checked?'Enter coordinates in any common format; they will be normalized when you leave the field.':''; });
+    groundToggle.addEventListener('change',syncGroundMode);
+    airToggle.addEventListener('change',syncAirMode);
+    el.querySelector('[data-field="helipad"]').addEventListener('change',syncAirMode);
+
+    const normalizeCoordinateInput=(input,isLat)=>{
+      if(!input.value.trim()) return;
+      const parsed=parseSingleCoordinate(input.value,isLat);
+      if(parsed===null){
+        calcStatus.textContent=`Could not understand the ${isLat?'latitude':'longitude'} override. Use decimal degrees, DDM, or DMS.`;
+        return;
+      }
+      input.value=decimalToDDM(parsed,isLat);
+      calcStatus.textContent='GPS override normalized to DD° MM.MMM′.';
+    };
+    lat.addEventListener('blur',()=>{ if(gpsToggle.checked) normalizeCoordinateInput(lat,true); });
+    lon.addEventListener('blur',()=>{ if(gpsToggle.checked) normalizeCoordinateInput(lon,false); });
+    [ground,air].forEach(input=>{
+      input.addEventListener('focus',()=>{
+        if(!input.readOnly && input.value!=='NA'){
+          const mins=travelDisplayToMinutes(input.value);
+          if(mins!=='') input.value=mins;
+        }
+      });
+      input.addEventListener('input',()=>{ if(!input.readOnly && input.value!=='NA') input.value=input.value.replace(/\D/g,''); });
+      input.addEventListener('blur',()=>{
+        if(!input.readOnly && input.value!=='NA' && input.value.trim()!=='') input.value=formatTravelTime(input.value);
+      });
+    });
+
+    const hospitalSearch=el.querySelector('[data-hospital-search]');
+    const hospitalSuggestions=el.querySelector('[data-place-suggestions]');
+    wirePlaceAutocomplete(hospitalSearch,hospitalSuggestions,place=>{
+      const protectedRecord=String(el.dataset.recordSource||'').startsWith('Imported');
+      if(protectedRecord){
+        openGoogleHospitalReview(el,place);
+      }else{
+        applyGoogleHospitalValues(el,place);
+      }
+    });
+    wireAddressAutocomplete(el);
+    const beginHospitalGoogleReview=async()=>{
+      try{
+        const place=await findGoogleHospitalCandidate(el);
+        openGoogleHospitalReview(el,place);
+      }catch(err){
+        window.IMPSShowNotice?.(`Could not review Google information: ${err.message||err}`);
+      }
+    };
+    el.querySelector('[data-review-google]')?.addEventListener('click',beginHospitalGoogleReview);
+    el.querySelector('[data-review-now]')?.addEventListener('click',beginHospitalGoogleReview);
+    el.querySelector('[data-review-dismiss]')?.addEventListener('click',()=>{
+      dismissHospitalGoogleReviewPrompt(el);
+      refreshGoogleReviewPrompt();
+    });
+
+    ['name','address','phone','phone2','helipad','level','vhf'].forEach(fieldName=>{
+      const input=el.querySelector(`[data-field="${fieldName}"]`);
+      input?.addEventListener('change',()=>{
+        if(el.dataset.recordSource==='Imported' || el.dataset.recordSource==='Imported + Manual' || el.dataset.recordSource==='Google'){
+          setHospitalManualField(el,fieldName);
+        }
+      });
+    });
+
+
+    el.querySelector('[data-calc-hospital]').addEventListener('click',()=>calculateHospital(el));
+    syncGpsMode(); syncGroundMode(); syncAirMode();
+  }
+
+  function responderRow(text=''){
+    const row=document.createElement('div'); row.className='row'; row.dataset.responder='1';
+    row.innerHTML=`<input data-field="responder" placeholder="Responder / Capability" value="${escapeHtml(text)}">
+      <button type="button" data-responder-up title="Move responder up">↑</button>
+      <button type="button" data-responder-down title="Move responder down">↓</button>
+      <button type="button" data-remove-responder>Remove</button>`;
+
+    row.querySelector('[data-remove-responder]').addEventListener('click',()=>row.remove());
+
+    row.querySelector('[data-responder-up]').addEventListener('click',()=>{
+      const prev=row.previousElementSibling;
+      if(prev && prev.matches('[data-responder]')) row.parentNode.insertBefore(row,prev);
+    });
+
+    row.querySelector('[data-responder-down]').addEventListener('click',()=>{
+      const next=row.nextElementSibling;
+      if(next && next.matches('[data-responder]')) row.parentNode.insertBefore(next,row);
+    });
+
+    return row;
+  }
+
+  function contactRow(text=''){
+    const row=document.createElement('div'); row.className='row'; row.dataset.contact='1';
+    row.innerHTML=`<input data-field="contact" placeholder="Point of Contact" value="${escapeHtml(text)}"><button type="button" data-remove-contact>Remove</button>`;
+    row.querySelector('[data-remove-contact]').addEventListener('click',()=>row.remove());
+    return row;
+  }
+
+  function locationResponderRow(text=''){
+    const row=document.createElement('div'); row.className='row'; row.dataset.locationResponder='1';
+    row.innerHTML=`<input data-field="locationResponder" placeholder="Responder / Capability" value="${escapeHtml(text)}"><button type="button" data-remove-location-responder>Remove</button>`;
+    row.querySelector('[data-remove-location-responder]').addEventListener('click',()=>row.remove());
+    return row;
+  }
+
+  function divisionCard(title,data={},branchName=''){
+    const el=document.createElement('div'); el.className='subcard'; el.dataset.division='1';
+    el.innerHTML=`<div class="division-header toolbar"><span data-division-display>${escapeHtml(data.name||title)}</span><div class="row"><span data-branch-move-controls class="row hidden"><button type="button" data-move-division title="Move this Division to the Branch selected at right">Move to Branch →</button><select data-move-division-target aria-label="Move Division to Branch" style="width:auto;min-width:150px"></select></span>${divisionMoveButtons()}${removeButton()}</div></div>
+      <div class="grid">${field('Division / Group Name','name')}</div>
+      <div style="margin-top:10px"><div class="toolbar"><b style="font-size:13px">EMS Responders & Capability</b><button type="button" data-add-responder>Add Responder / Capability</button></div><div data-responder-list></div></div>
+      <div class="grid" style="margin-top:10px">
+        ${field('Equipment Available on Scene','equipment')}
+        ${field('Medical Emergency Channel','channel')}
+        ${selectField('Helispots Used?','helispotsUsed',['Yes','No'])}
+        <label data-helispots-entry class="hidden">Helispots
+          <input data-field="helispots" placeholder="Example: H-1, H-2">
+        </label>
+        ${selectField('Use response time to Division?','responseTimesUsed',['Yes','No'])}
+        <div data-response-times-entry class="hidden full">
+          <div class="grid">
+            <label>Ground Response Time To:
+              <input data-field="groundResponseTimeTo" placeholder="Enter location and time, e.g. ICP - 25 min">
+            </label>
+            <label>Air Response Time To:
+              <input data-field="airResponseTimeTo" placeholder="Enter location and time, e.g. Helibase - 12 min">
+            </label>
+          </div>
+          <span class="small">Enter the destination/location and response time manually for both Ground and Air.</span>
+        </div>
+      </div>`;
+    wireRemove(el); wireMove(el);
+    const list=el.querySelector('[data-responder-list]');
+    el.querySelector('[data-add-responder]').addEventListener('click',()=>list.appendChild(responderRow()));
+    fillFields(el,{
+      name:data.name||'',
+      equipment:data.equipment||'',
+      channel:data.channel ?? data.medicalEmergencyChannel ?? '',
+      helispotsUsed:data.helispotsUsed ?? ((data.helispots ?? data.helispotNumbers) ? 'Yes' : 'No'),
+      helispots:data.helispots ?? data.helispotNumbers ?? '',
+      responseTimesUsed:data.responseTimesUsed ?? ((data.groundResponseTimeTo || data.airResponseTimeTo) ? 'Yes' : 'No'),
+      groundResponseTimeTo:data.groundResponseTimeTo ?? '',
+      airResponseTimeTo:data.airResponseTimeTo ?? ''
+    });
+    (data.responders?.length?data.responders:['']).forEach(x=>list.appendChild(responderRow(x)));
+
+    const helispotsUsed=el.querySelector('[data-field="helispotsUsed"]');
+    const helispotsEntry=el.querySelector('[data-helispots-entry]');
+    const helispotsInput=el.querySelector('[data-field="helispots"]');
+    const refreshHelispots=()=>{
+      const enabled=helispotsUsed.value==='Yes';
+      helispotsEntry.classList.toggle('hidden',!enabled);
+      if(!enabled) helispotsInput.value='';
+    };
+    helispotsUsed.addEventListener('change',refreshHelispots);
+    refreshHelispots();
+
+    const responseTimesUsed=el.querySelector('[data-field="responseTimesUsed"]');
+    const responseTimesEntry=el.querySelector('[data-response-times-entry]');
+    const groundResponseTimeTo=el.querySelector('[data-field="groundResponseTimeTo"]');
+    const airResponseTimeTo=el.querySelector('[data-field="airResponseTimeTo"]');
+    const refreshResponseTimes=()=>{
+      const enabled=responseTimesUsed.value==='Yes';
+      responseTimesEntry.classList.toggle('hidden',!enabled);
+      if(!enabled){
+        groundResponseTimeTo.value='';
+        airResponseTimeTo.value='';
+      }
+    };
+    responseTimesUsed.addEventListener('change',refreshResponseTimes);
+    refreshResponseTimes();
+
+    const refreshTitle=()=>{
+      const dname=value(el,'name') || title;
+      const branch=el.closest('[data-branch]');
+      const bname=branch ? (value(branch,'branchName') || branch.querySelector('[data-branch-display]')?.textContent || '') : '';
+      el.querySelector('[data-division-display]').textContent=bname ? `${bname} - ${dname}` : dname;
+    };
+    el._refreshTitle=refreshTitle;
+    el.querySelector('[data-field="name"]').addEventListener('input',refreshTitle);
+    el.querySelector('[data-move-division]').addEventListener('click',()=>{
+      const targetId=el.querySelector('[data-move-division-target]').value;
+      const target=[...document.querySelectorAll('[data-branch]')].find(b=>b.dataset.branchId===targetId);
+      if(target){ target.querySelector('[data-divisions]').appendChild(el); refreshTitle(); refreshBranchMoveControls(); }
+    });
+    refreshTitle();
+    return el;
+  }
+
+  function createStandaloneDivision(data={}){
+    $('divisionList').appendChild(divisionCard(`Division ${++counts.division}`,data,''));
+  }
+
+  function createBranch(data={}, options={}){
+    const n=++counts.branch, el=document.createElement('div');
+    const tone=((n-1)%6)+1;
+    el.className=`subcard branch-tone-${tone}`; el.dataset.branch='1'; el.dataset.branchId=`branch-${n}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    el.innerHTML=`<div class="toolbar" style="border-bottom:2px solid rgba(0,0,0,.22);padding-bottom:8px"><h3 data-branch-display>${escapeHtml(data.branchName ?? data.name ?? `Branch ${n}`)}</h3><div class="row">${branchMoveButtons()}${removeButton()}</div></div>
+      ${field('Branch Name','branchName')}<div style="margin-top:12px"><b>Divisions</b></div><div data-divisions></div>
+      <div class="toolbar" style="margin-top:10px"><span></span><button type="button" data-add-division>Add Division</button></div>`;
+    wireRemove(el); wireMove(el);
+    const list=el.querySelector('[data-divisions]'); let local=0;
+    const branchInput=el.querySelector('[data-field="branchName"]');
+    const branchDisplay=el.querySelector('[data-branch-display]');
+    const currentBranchName=()=>branchInput.value.trim() || `Branch ${n}`;
+    const add=(d={})=>{ local++; const card=divisionCard(`Division ${local}`,d,currentBranchName()); list.appendChild(card); card._refreshTitle?.(); refreshBranchMoveControls(); return card; };
+    el.querySelector('[data-add-division]').addEventListener('click',()=>add());
+    fillFields(el,{branchName:data.branchName ?? data.name ?? ''});
+    const initial=Array.isArray(data.divisions) ? data.divisions : [];
+    if(initial.length) initial.forEach(add); else if(!options.noDefaultDivision) add({});
+    branchInput.addEventListener('input',()=>{ branchDisplay.textContent=currentBranchName(); [...list.querySelectorAll('[data-division]')].forEach(card=>card._refreshTitle?.()); refreshBranchMoveControls(); });
+    branchDisplay.textContent=currentBranchName();
+    $('branchList').appendChild(el);
+    refreshBranchMoveControls();
+    return el;
+  }
+
+  function refreshBranchMoveControls(){
+    const branches=[...document.querySelectorAll('[data-branch]')];
+    const branchMode=!$('branchMode').classList.contains('hidden');
+    document.querySelectorAll('[data-division]').forEach(card=>{
+      const controls=card.querySelector('[data-branch-move-controls]');
+      if(!controls) return;
+      controls.classList.toggle('hidden',!branchMode || !card.closest('[data-branch]'));
+      const select=card.querySelector('[data-move-division-target]');
+      if(!select) return;
+      const current=card.closest('[data-branch]')?.dataset.branchId || '';
+      select.innerHTML=branches.map(b=>`<option value="${b.dataset.branchId}" ${b.dataset.branchId===current?'selected':''}>${escapeHtml(value(b,'branchName') || b.querySelector('[data-branch-display]')?.textContent || 'Branch')}</option>`).join('');
+      card._refreshTitle?.();
+    });
+  }
+
+  function createLocation(data={}){
+    const n=++counts.location, el=document.createElement('div'); el.className='subcard'; el.dataset.location='1';
+    el.innerHTML=`<div class="division-header toolbar"><span data-location-display>Location ${n}</span><div class="row">${moveButtons()}${removeButton()}</div></div>
+      <div class="grid">
+        ${field('Location','location')}
+      </div>
+
+      <div style="margin-top:10px">
+        <div class="toolbar"><b style="font-size:13px">Points of Contact</b><button type="button" data-add-contact>Add Point of Contact</button></div>
+        <div data-contact-list></div>
+      </div>
+
+      <div style="margin-top:10px">
+        <div class="toolbar"><b style="font-size:13px">EMS Responders & Capability</b><button type="button" data-add-location-responder>Add Responder / Capability</button></div>
+        <div data-location-responder-list></div>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        ${field('Equipment Available on Scene','equipment')}
+        ${field('Medical Emergency Channel','channel')}
+      </div>`;
+    wireRemove(el);
+    wireMove(el);
+    $('locationList').appendChild(el);
+
+    fillFields(el,{
+      location:data.location||'',
+      equipment:data.equipment||'',
+      channel:data.medicalEmergencyChannel ?? data.channel ?? ''
+    });
+
+    const locationInput=el.querySelector('[data-field="location"]');
+    const locationDisplay=el.querySelector('[data-location-display]');
+    const refreshLocationTitle=()=>{
+      const name=locationInput.value.trim();
+      locationDisplay.textContent=name ? `Location - ${name}` : `Location ${n}`;
+    };
+    locationInput.addEventListener('input',refreshLocationTitle);
+    refreshLocationTitle();
+
+    const contactList=el.querySelector('[data-contact-list]');
+    el.querySelector('[data-add-contact]').addEventListener('click',()=>contactList.appendChild(contactRow()));
+
+    const contacts = Array.isArray(data.pointsOfContact)
+      ? data.pointsOfContact
+      : (data.pointOfContact ? [data.pointOfContact] : (data.contact ? [data.contact] : ['']));
+    (contacts.length ? contacts : ['']).forEach(x=>contactList.appendChild(contactRow(x)));
+
+    const responderList=el.querySelector('[data-location-responder-list]');
+    el.querySelector('[data-add-location-responder]').addEventListener('click',()=>responderList.appendChild(locationResponderRow()));
+
+    let responders=[];
+    if(Array.isArray(data.responders)) responders=data.responders;
+    else if(Array.isArray(data.respondersCapability)) responders=data.respondersCapability;
+    else if(data.respondersCapability) responders=[data.respondersCapability];
+    else if(data.responders) responders=[data.responders];
+    (responders.length ? responders : ['']).forEach(x=>responderList.appendChild(locationResponderRow(x)));
+  }
+
+  function collectDivision(el){
+    return {
+      name:value(el,'name'),
+      responders:[...el.querySelectorAll('[data-responder]')].map(r=>value(r,'responder')).filter(Boolean),
+      equipment:value(el,'equipment'),
+      channel:value(el,'channel'),
+      helispotsUsed:value(el,'helispotsUsed'),
+      helispots:value(el,'helispotsUsed')==='Yes' ? value(el,'helispots') : '',
+      responseTimesUsed:value(el,'responseTimesUsed'),
+      groundResponseTimeTo:value(el,'responseTimesUsed')==='Yes' ? value(el,'groundResponseTimeTo') : '',
+      airResponseTimeTo:value(el,'responseTimesUsed')==='Yes' ? value(el,'airResponseTimeTo') : ''
+    };
+  }
+
+  
+  function normalizeHHMM(raw){
+    const digits=String(raw||'').replace(/\D/g,'').slice(0,4);
+    if(digits.length!==4)return digits;
+    const hh=Number(digits.slice(0,2)), mm=Number(digits.slice(2,4));
+    if(hh>23 || mm>59)return digits;
+    return digits;
+  }
+
+
+  function decimalToDDM(value,isLat){
+    const n=Number(value);
+    if(!Number.isFinite(n)) return '';
+    const hemi=isLat ? (n>=0?'N':'S') : (n>=0?'E':'W');
+    const abs=Math.abs(n), deg=Math.floor(abs), min=(abs-deg)*60;
+    return `${deg}° ${min.toFixed(3).padStart(6,'0')}′ ${hemi}`;
+  }
+
+  function parseSingleCoordinate(text,isLat){
+    if(text===null || text===undefined) return null;
+    let t=String(text).trim().toUpperCase().replace(/[º˚]/g,'°').replace(/[’']/g,'′').replace(/[”]/g,'″');
+    if(!t) return null;
+    const hemi=(t.match(/[NSEW]/)||[])[0]||'';
+    const signFromHemi=/[SW]/.test(hemi)?-1:1;
+    const nums=(t.match(/[-+]?\d+(?:\.\d+)?/g)||[]).map(Number);
+    if(!nums.length) return null;
+    let val;
+    if(nums.length>=3) val=Math.abs(nums[0])+nums[1]/60+nums[2]/3600;
+    else if(nums.length===2) val=Math.abs(nums[0])+nums[1]/60;
+    else val=Math.abs(nums[0]);
+    let sign=nums[0]<0?-1:1;
+    if(hemi) sign=signFromHemi;
+    val*=sign;
+    const limit=isLat?90:180;
+    if(!Number.isFinite(val) || Math.abs(val)>limit) return null;
+    if(hemi && isLat && !/[NS]/.test(hemi)) return null;
+    if(hemi && !isLat && !/[EW]/.test(hemi)) return null;
+    return val;
+  }
+
+  function coordinateForOutput(el,isLat){
+    const field=isLat?'latitudeDDM':'longitudeDDM';
+    const input=value(el,field);
+    const enabled=el.querySelector('[data-field="gpsOverrideEnabled"]')?.checked;
+    if(!enabled) return input;
+    const parsed=parseSingleCoordinate(input,isLat);
+    return parsed===null ? input : decimalToDDM(parsed,isLat);
+  }
+
+  function parseCoordinatePair(text){
+    if(!text) return null;
+    const t=String(text).trim();
+
+    // DDM: 47 49.032N, 120 42.868W  (or with degree/minute symbols)
+    const ddm=[...t.matchAll(/(\d{1,3})\s*(?:°|\s)\s*(\d{1,2}(?:\.\d+)?)\s*(?:['′m]|\s)?\s*([NSEW])/gi)];
+    if(ddm.length>=2){
+      const conv=m=>{
+        let v=Number(m[1])+Number(m[2])/60;
+        if(/[SW]/i.test(m[3])) v*=-1;
+        return v;
+      };
+      const vals=ddm.slice(0,2).map(m=>({v:conv(m),h:m[3].toUpperCase()}));
+      const lat=vals.find(x=>/[NS]/.test(x.h))?.v;
+      const lon=vals.find(x=>/[EW]/.test(x.h))?.v;
+      if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon};
+    }
+
+    // DMS: 47° 25' 24.5" N, 120° 18' 37.3" W
+    const dms=[...t.matchAll(/(\d{1,3})\D+(\d{1,2})\D+(\d{1,2}(?:\.\d+)?)\s*(?:["″s]|\s)?\s*([NSEW])/gi)];
+    if(dms.length>=2){
+      const conv=m=>{
+        let v=Number(m[1])+Number(m[2])/60+Number(m[3])/3600;
+        if(/[SW]/i.test(m[4])) v*=-1;
+        return v;
+      };
+      const vals=dms.slice(0,2).map(m=>({v:conv(m),h:m[4].toUpperCase()}));
+      const lat=vals.find(x=>/[NS]/.test(x.h))?.v;
+      const lon=vals.find(x=>/[EW]/.test(x.h))?.v;
+      if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon};
+    }
+
+    // Decimal degrees: 47.8172, -120.7145
+    const decimal=t.match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*[, ]+\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+    if(decimal){
+      const lat=Number(decimal[1]), lon=Number(decimal[2]);
+      if(Math.abs(lat)<=90 && Math.abs(lon)<=180) return {lat,lon};
+    }
+    return null;
+  }
+
+  async function geocodeAddress(address){
+    const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=${encodeURIComponent(address)}`;
+    const r=await fetch(url,{headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error('Geocoding request failed');
+    const data=await r.json();
+    if(!data.length) throw new Error('Address not found');
+    return {lat:Number(data[0].lat),lon:Number(data[0].lon)};
+  }
+
+  async function resolveOrigin(){
+    const originEl=$('originAddress');
+    const raw=originEl.value.trim();
+
+    // Do not coerce blank data attributes with Number(''): that produces 0 and
+    // previously caused an unset origin to be sent as 0.000000, 0.000000.
+    const savedLatRaw=String(originEl.dataset.placeLat??'').trim();
+    const savedLonRaw=String(originEl.dataset.placeLon??'').trim();
+    if(savedLatRaw!=='' && savedLonRaw!==''){
+      const savedLat=Number(savedLatRaw), savedLon=Number(savedLonRaw);
+      const validSaved=Number.isFinite(savedLat)&&Number.isFinite(savedLon)
+        && Math.abs(savedLat)<=90 && Math.abs(savedLon)<=180
+        && !(savedLat===0 && savedLon===0);
+      if(validSaved) return {lat:savedLat,lon:savedLon,source:originEl.dataset.placeSource||'Saved'};
+    }
+
+    const parsed=parseCoordinatePair(raw);
+    if(parsed && !(parsed.lat===0 && parsed.lon===0)) return {...parsed,source:'Manual GPS'};
+    if(!raw) throw new Error('Unable to calculate transport times: missing transport origin on the Incident tab.');
+
+    const geocoded=await geocodeAddress(raw);
+    if(!Number.isFinite(geocoded.lat)||!Number.isFinite(geocoded.lon)||(geocoded.lat===0&&geocoded.lon===0)){
+      throw new Error('Unable to calculate transport times: the transport origin on the Incident tab could not be located. Check the origin address or coordinates.');
+    }
+    return {...geocoded,source:'Address geocode'};
+  }
+
+  async function routeGround(origin,destination){
+    let googleError=null;
+    const fmtPoint=p=>`${Number(p.lat).toFixed(6)}, ${Number(p.lon).toFixed(6)}`;
+
+    if(googleConfigured && window.IMPSGoogle?.routeMinutes){
+      try{
+        const raw=await window.IMPSGoogle.routeMinutes(origin.lat,origin.lon,destination.lat,destination.lon);
+        const data=typeof raw==='string'?JSON.parse(raw):raw;
+
+        const cloudMinutes=Number(data?.minutes);
+        if(Number.isFinite(cloudMinutes) && cloudMinutes>0){
+          return {
+            minutes:Math.max(1,Math.round(cloudMinutes)),
+            source:data?.source||'Google Routes'
+          };
+        }
+
+        const duration=data?.routes?.[0]?.duration||'';
+        const seconds=Number(String(duration).replace(/s$/,''));
+        if(Number.isFinite(seconds) && seconds>0){
+          return {minutes:Math.max(1,Math.round(seconds/60)),source:'Google Maps'};
+        }
+
+        googleError=new Error('Google Routes returned no travel time');
+      }catch(err){
+        googleError=err;
+        console.warn('Google route unavailable; trying native fallback routing:',err);
+      }
+    }
+
+    // Use the native Tauri bridge for fallback routing. This avoids browser/WebView
+    // CORS and networking restrictions that can make the public OSRM router appear
+    // to fail even when a road route exists.
+    try{
+      if(!window.IMPSGoogle?.fallbackRouteMinutes) throw new Error('Native fallback router is unavailable');
+      const raw=await window.IMPSGoogle.fallbackRouteMinutes(origin.lat,origin.lon,destination.lat,destination.lon);
+      const data=typeof raw==='string'?JSON.parse(raw):raw;
+      const minutes=Number(data?.minutes);
+      if(!Number.isFinite(minutes) || minutes<=0) throw new Error('Fallback router returned no driving route');
+      return {
+        minutes:Math.max(1,Math.round(minutes)),
+        source:data?.source||'Fallback road route'
+      };
+    }catch(fallbackErr){
+      const googleMessage=googleError
+        ? String(googleError?.message||googleError).replace(/^IMPS route error\s*\d+\s*:\s*/i,'').trim()
+        : 'Google routing was unavailable';
+      console.error('Route diagnostics', {
+        origin,
+        destination,
+        googleError:String(googleError?.message||googleError||''),
+        fallbackError:String(fallbackErr?.message||fallbackErr||'')
+      });
+      throw new Error(`No driving route could be calculated. Origin sent: ${fmtPoint(origin)}. Hospital sent: ${fmtPoint(destination)}. Google: ${googleMessage}. Fallback: ${fallbackErr?.message||fallbackErr}.`);
+    }
+  }
+
+  function travelDisplayToMinutes(value){
+    const raw=String(value??'').trim();
+    if(!raw) return '';
+    if(/^n\/?a$/i.test(raw)) return 'NA';
+    if(/^\d+(?:\.\d+)?$/.test(raw)) return String(Math.max(0,Math.round(Number(raw))));
+    const hr=raw.match(/(\d+)\s*hrs?/i);
+    const mn=raw.match(/(\d+)\s*mins?/i);
+    if(hr || mn) return String((hr?Number(hr[1])*60:0)+(mn?Number(mn[1]):0));
+    return '';
+  }
+
+  function formatTravelTime(minutes){
+    const raw=travelDisplayToMinutes(minutes);
+    if(raw==='NA') return 'NA';
+    if(raw==='') return '';
+    const rounded=Number(raw);
+    if(rounded < 60) return `${rounded} mins`;
+    const hrs=Math.floor(rounded/60), mins=rounded%60;
+    if(mins===0) return hrs===1 ? '1 hr' : `${hrs} hrs`;
+    return hrs===1 ? `1 hr ${mins} mins` : `${hrs} hrs ${mins} mins`;
+  }
+
+  function finalHospitalTime(el,field){
+    return travelDisplayToMinutes(value(el,field));
+  }
+
+  function greatCircleMiles(a,b){
+    const R=3958.7613;
+    const rad=x=>x*Math.PI/180;
+    const dLat=rad(b.lat-a.lat), dLon=rad(b.lon-a.lon);
+    const lat1=rad(a.lat), lat2=rad(b.lat);
+    const h=Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
+
+  function calculateAirMinutes(origin,destination){
+    const miles=greatCircleMiles(origin,destination);
+    return Math.max(1,Math.round((miles/135)*60));
+  }
+
+  function showCalculationError(el,message,field=null){
+    const status=el?.querySelector?.('[data-calc-status]');
+    if(status){
+      status.textContent='';
+      status.classList.add('error');
+      status.classList.remove('success');
+    }
+
+    const modal=$('validationModal');
+    const text=$('validationModalText');
+    const list=$('validationModalList');
+
+    if(text) text.textContent='IMPS can’t continue with this calculation until the item below is corrected.';
+    if(list){
+      list.innerHTML='';
+      const li=document.createElement('li');
+      li.textContent=message;
+      list.appendChild(li);
+    }
+
+    if(field){
+      field.classList.add('validation-error');
+      field.closest('label')?.classList.add('validation-error-label');
+    }
+
+    modal?.classList.remove('hidden');
+
+    const close=$('validationModalClose');
+    if(close && field){
+      close.addEventListener('click',()=>{
+        field.scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(()=>field.focus(),250);
+      },{once:true});
+    }
+  }
+
+  function clearCalculationError(el){
+    const status=el?.querySelector?.('[data-calc-status]');
+    if(status){
+      status.classList.remove('error');
+      status.classList.remove('success');
+    }
+  }
+
+  async function calculateHospital(el){
+    const helipadSelect=el.querySelector('[data-field="helipad"]');
+    const selectedHelipad=String(helipadSelect?.value||'').trim();
+    if(!selectedHelipad){
+      const airField=el.querySelector('[data-field="airTimeMin"]');
+      if(airField) airField.value='';
+      showCalculationError(
+        el,
+        'Helipad selection is required. Select Yes or No before calculating GPS and transport times.',
+        helipadSelect
+      );
+      return;
+    }
+
+    const status=el.querySelector('[data-calc-status]');
+    const address=value(el,'address');
+    if(!address){
+      const addressField=el.querySelector('[data-field="address"]');
+      showCalculationError(
+        el,
+        'Hospital Complete Address is required before calculating GPS and transport times.',
+        addressField
+      );
+      return;
+    }
+    clearCalculationError(el);
+    status.textContent='Calculating…';
+    try{
+      const origin=await resolveOrigin();
+
+      // Google review is optional. Blank hospital Google coordinate attributes
+      // must not be coerced with Number(''), because that becomes 0,0.
+      const savedLatRaw=String(el.dataset.googleLat??'').trim();
+      const savedLonRaw=String(el.dataset.googleLon??'').trim();
+      let hospital=null;
+
+      if(savedLatRaw!=='' && savedLonRaw!==''){
+        const savedLat=Number(savedLatRaw), savedLon=Number(savedLonRaw);
+        const validSaved=Number.isFinite(savedLat)&&Number.isFinite(savedLon)
+          && Math.abs(savedLat)<=90 && Math.abs(savedLon)<=180
+          && !(savedLat===0 && savedLon===0);
+        if(validSaved) hospital={lat:savedLat,lon:savedLon};
+      }
+
+      // Google review is optional. If no stored coordinates exist, resolve the
+      // current hospital information for calculation only. This does NOT apply
+      // Google review changes to the hospital record.
+      if(!hospital){
+        try{
+          if(googleConfigured && window.IMPSGoogle?.autocomplete && window.IMPSGoogle?.placeDetails){
+            const q=[value(el,'name'),address].filter(Boolean).join(' ');
+            const token=newSessionToken();
+            const raw=await window.IMPSGoogle.autocomplete(q,token);
+            const data=typeof raw==='string'?JSON.parse(raw):raw;
+            const suggestion=(data.suggestions||[])[0];
+            const placeId=suggestion?.placeId || suggestion?.placePrediction?.placeId;
+            if(placeId){
+              const detailRaw=await window.IMPSGoogle.placeDetails(placeId);
+              const detail=normalizePlaceDetails(detailRaw);
+              if(Number.isFinite(detail.lat)&&Number.isFinite(detail.lon)&&!(detail.lat===0&&detail.lon===0)){
+                hospital={lat:detail.lat,lon:detail.lon};
+              }
+            }
+          }
+        }catch(err){
+          console.warn('Google hospital location lookup unavailable; trying address geocode:',err);
+        }
+      }
+
+      if(!hospital){
+        try{
+          hospital=await geocodeAddress(address);
+        }catch(err){
+          throw new Error('Unable to locate this hospital for transport-time calculation. Review the hospital address or use Review Google Info.');
+        }
+        if(!Number.isFinite(hospital.lat)||!Number.isFinite(hospital.lon)||(hospital.lat===0&&hospital.lon===0)){
+          throw new Error('Unable to locate this hospital for transport-time calculation. Review the hospital address or use Review Google Info.');
+        }
+      }
+
+      const groundResult=await routeGround(origin,hospital);
+      const mins=groundResult.minutes;
+      const airMins=calculateAirMinutes(origin,hospital);
+      el.dataset.calculatedLat=decimalToDDM(hospital.lat,true);
+      el.dataset.calculatedLon=decimalToDDM(hospital.lon,false);
+      el.dataset.calculatedGround=String(mins);
+      el.dataset.calculatedAir=String(airMins);
+      if(!el.querySelector('[data-field="gpsOverrideEnabled"]').checked){
+        el.querySelector('[data-field="latitudeDDM"]').value=el.dataset.calculatedLat;
+        el.querySelector('[data-field="longitudeDDM"]').value=el.dataset.calculatedLon;
+      }
+      const groundOverride=el.querySelector('[data-field="groundOverrideEnabled"]');
+      const airOverride=el.querySelector('[data-field="airOverrideEnabled"]');
+      const groundIsOverridden=!!groundOverride?.checked;
+      const airIsOverridden=value(el,'helipad')!=='No' && !!airOverride?.checked;
+
+      if(!groundIsOverridden) el.querySelector('[data-field="groundTimeMin"]').value=formatTravelTime(el.dataset.calculatedGround);
+      if(value(el,'helipad')==='No') el.querySelector('[data-field="airTimeMin"]').value='NA';
+      else if(!airIsOverridden) el.querySelector('[data-field="airTimeMin"]').value=formatTravelTime(el.dataset.calculatedAir);
+
+      status.textContent=`Ground ${formatTravelTime(mins)}${value(el,'helipad')==='No'?'':` • Air ${formatTravelTime(airMins)}`}`;
+      status.classList.remove('error');
+      status.classList.add('success');
+
+      // A calculation may succeed while an imported/manual transport-time
+      // override prevents the new value from being displayed. Ask whether the
+      // MEDL wants to replace those overridden transport times with this result.
+      if(groundIsOverridden || airIsOverridden){
+        transportOverridePromptState={
+          el,
+          clearGround:groundIsOverridden,
+          clearAir:airIsOverridden
+        };
+        $('transportOverrideCalculatedValue').textContent=
+          `Calculated: Ground ${formatTravelTime(mins)}${value(el,'helipad')==='No'?'':` • Air ${formatTravelTime(airMins)}`}`;
+        $('transportOverrideModal')?.classList.remove('hidden');
+      }
+    }catch(err){
+      const message=String(err?.message||err||'Unknown calculation error');
+      let field=null;
+
+      if(/origin/i.test(message)){
+        field=$('originAddress') || $('originName');
+      }else if(/address/i.test(message)){
+        field=el.querySelector('[data-field="address"]');
+      }else if(/route|routing|travel time/i.test(message)){
+        field=el.querySelector('[data-field="groundTimeMin"]');
+      }
+
+      showCalculationError(el,`Could not calculate GPS & transport times: ${message}`,field);
+    }
+  }
+
+
+  async function calculateAllHospitals(){
+    const hospitals=[...document.querySelectorAll('[data-hospital]')];
+    if(!hospitals.length) return;
+    const button=$('btnCalcAllHospitals');
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Calculating…';
+    for(const hospital of hospitals){
+      await calculateHospital(hospital);
+    }
+    button.textContent=original;
+    button.disabled=false;
+  }
+
+  function collect(){
+    const branchesUsed=document.querySelector('input[name="branchesUsed"]:checked').value==='yes';
+    return {
+      incident:{
+        name:$('incidentName').value.trim(),
+        operationalPeriodStart:{
+          date:$('opStartDate').value,
+          time:normalizeHHMM($('opStartTime').value)
+        },
+        operationalPeriodEnd:{
+          date:$('opEndDate').value,
+          time:normalizeHHMM($('opEndTime').value)
+        },
+        transportTimeOrigin:{name:$('originName').value.trim(),address:$('originAddress').value.trim(),lat:$('originAddress').dataset.placeLat||'',lon:$('originAddress').dataset.placeLon||'',placeId:$('originAddress').dataset.placeId||'',source:$('originAddress').dataset.placeSource||''},
+        logoDataUrl,
+        logoFileName
+      },
+      groundAmbulances:[...document.querySelectorAll('[data-ground]')].map(e=>({
+        name:value(e,'name'),address:value(e,'address'),phone:value(e,'phone'),emsFrequency:value(e,'frequency'),als:value(e,'als')
+      })),
+      airAmbulances:[...document.querySelectorAll('[data-air]')].map(e=>({
+        name:value(e,'name'),phone:value(e,'phone'),aircraftCapability:value(e,'capability')
+      })),
+      hospitals:[...document.querySelectorAll('[data-hospital]')].map(e=>({
+        name:value(e,'name'),address:value(e,'address'),phone:value(e,'phone'),phone2:value(e,'phone2'),helipad:value(e,'helipad'),
+        recordSource:e.dataset.recordSource||'', importedRecord:String(e.dataset.recordSource||'').startsWith('Imported'), manualFields:(()=>{try{return JSON.parse(e.dataset.manualFields||'[]')}catch{return []}})(), googleReviewCompleted:e.dataset.googleReviewCompleted==='true', googleReviewPromptDismissed:e.dataset.googleReviewPromptDismissed==='true',
+        googlePlaceId:e.dataset.googlePlaceId||'',googleLat:e.dataset.googleLat||'',googleLon:e.dataset.googleLon||'',placeSource:e.dataset.placeSource||'',
+        levelOfCare:value(e,'level'),vhf:value(e,'vhf'),gpsDisplayFormat:"DD° MM.MMM′",
+        gpsOverrideEnabled:e.querySelector('[data-field="gpsOverrideEnabled"]').checked,
+        gpsOverrideValid:!e.querySelector('[data-field="gpsOverrideEnabled"]').checked || (parseSingleCoordinate(value(e,'latitudeDDM'),true)!==null && parseSingleCoordinate(value(e,'longitudeDDM'),false)!==null),
+        calculatedLatitudeDDM:e.dataset.calculatedLat||'', calculatedLongitudeDDM:e.dataset.calculatedLon||'',
+        latitudeDDM:coordinateForOutput(e,true),longitudeDDM:coordinateForOutput(e,false),
+        groundOverrideEnabled:e.querySelector('[data-field="groundOverrideEnabled"]').checked,
+        calculatedGroundMin:e.dataset.calculatedGround||'', finalGroundMin:finalHospitalTime(e,'groundTimeMin'),
+        finalGroundDisplay:formatTravelTime(finalHospitalTime(e,'groundTimeMin')),
+        airOverrideEnabled:e.querySelector('[data-field="airOverrideEnabled"]').checked,
+        calculatedAirMin:e.dataset.calculatedAir||'', finalAirMin:value(e,'helipad')==='No'?'NA':finalHospitalTime(e,'airTimeMin'),
+        finalAirDisplay:value(e,'helipad')==='No'?'NA':formatTravelTime(finalHospitalTime(e,'airTimeMin'))
+      })),
+      branchesUsed,
+      branches:branchesUsed?[...document.querySelectorAll('[data-branch]')].map(b=>({
+        branchName:value(b,'branchName'),
+        divisions:[...b.querySelectorAll('[data-division]')].map(collectDivision)
+      })):[],
+      divisions:branchesUsed?[]:[...document.querySelectorAll('#divisionList [data-division]')].map(collectDivision),
+      locations:[...document.querySelectorAll('[data-location]')].map(e=>{
+        const pointsOfContact=[...e.querySelectorAll('[data-contact]')].map(r=>value(r,'contact')).filter(Boolean);
+        const responders=[...e.querySelectorAll('[data-location-responder]')].map(r=>value(r,'locationResponder')).filter(Boolean);
+        return {
+          location:value(e,'location'),
+          pointsOfContact,
+          pointOfContact:pointsOfContact.join(' | '),
+          responders,
+          respondersCapability:responders.join(' | '),
+          equipment:value(e,'equipment'),
+          medicalEmergencyChannel:value(e,'channel')
+        };
+      })
+  };
+  }
+
+  function reviewData(){
+    const d=collect(), miss=[];
+    if(!d.incident.name)miss.push('Incident Name');
+    const validTime=t=>/^([01]\d|2[0-3])[0-5]\d$/.test(t||'');
+    if(!d.incident.operationalPeriodStart.date)miss.push('Operational Period Start Date');
+    if(d.incident.operationalPeriodStart.time && !validTime(d.incident.operationalPeriodStart.time))miss.push('Operational Period Start Time (use HHMM, e.g. 0600)');
+    if(!d.incident.operationalPeriodEnd.date)miss.push('Operational Period End Date');
+    if(d.incident.operationalPeriodEnd.time && !validTime(d.incident.operationalPeriodEnd.time))miss.push('Operational Period End Time (use HHMM, e.g. 1800)');
+    
+
+    $('summary').innerHTML=miss.length
+      ? `<span class="badge">Needs attention</span> ${miss.join(', ')}`
+      : `<span class="badge">Ready for structural review</span> ${d.groundAmbulances.length} ground, ${d.airAmbulances.length} air, ${d.hospitals.length} hospitals, ${d.branchesUsed?d.branches.reduce((n,b)=>n+b.divisions.length,0):d.divisions.length} divisions, ${d.locations.length} locations.`;
+
+    $('review').textContent=JSON.stringify(d,null,2);
+    $('review').classList.remove('hidden');
+  }
+
+  function saveJson(){
+    const data=collect();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(data.incident.name||'IMPS_Incident').replace(/[^\w.-]+/g,'_')+'.json';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+  function clearDynamic(){
+    ['groundList','airList','hospitalList','divisionList','branchList','locationList'].forEach(id=>$(id).innerHTML='');
+    Object.keys(counts).forEach(k=>counts[k]=0);
+  }
+
+  function loadData(d){
+    clearDynamic();
+    $('incidentName').value=d.incident?.name||'';
+    const oldStart=d.incident?.operationalPeriodStart;
+    const oldEnd=d.incident?.operationalPeriodEnd;
+    $('opStartDate').value=(oldStart && typeof oldStart==='object') ? (oldStart.date||'') : '';
+    $('opStartTime').value=(oldStart && typeof oldStart==='object') ? String(oldStart.time||'').replace(':','') : '';
+    $('opEndDate').value=(oldEnd && typeof oldEnd==='object') ? (oldEnd.date||'') : '';
+    $('opEndTime').value=(oldEnd && typeof oldEnd==='object') ? String(oldEnd.time||'').replace(':','') : '';
+    $('originName').value=d.incident?.transportTimeOrigin?.name||'';
+    $('originAddress').value=d.incident?.transportTimeOrigin?.address||'';
+    $('originAddress').dataset.placeLat=d.incident?.transportTimeOrigin?.lat||'';
+    $('originAddress').dataset.placeLon=d.incident?.transportTimeOrigin?.lon||'';
+    $('originAddress').dataset.placeId=d.incident?.transportTimeOrigin?.placeId||'';
+    $('originAddress').dataset.placeSource=d.incident?.transportTimeOrigin?.source||'';
+    setLogo(d.incident?.logoDataUrl||'',d.incident?.logoFileName||'');
+
+    (d.groundAmbulances||[]).forEach(createGround);
+    (d.airAmbulances||[]).forEach(createAir);
+    (d.hospitals||[]).forEach(createHospital);
+    (d.locations||[]).forEach(createLocation);
+
+    const yes=!!d.branchesUsed;
+    document.querySelector(`input[name="branchesUsed"][value="${yes?'yes':'no'}"]`).checked=true;
+    $('noBranchMode').classList.toggle('hidden',yes);
+    $('branchMode').classList.toggle('hidden',!yes);
+
+    if(yes)(d.branches||[]).forEach(createBranch);
+    else (d.divisions||[]).forEach(createStandaloneDivision);
+
+    if(!document.querySelector('[data-ground]'))createGround();
+    if(!document.querySelector('[data-air]'))createAir();
+    if(!document.querySelector('[data-hospital]'))createHospital();
+    if(!document.querySelector('[data-location]'))createLocation();
+    if(!yes&&!document.querySelector('#divisionList [data-division]'))createStandaloneDivision();
+
+    reviewData();
+  }
+
+
+  $('logoFile').addEventListener('change',()=>{
+    const f=$('logoFile').files[0];
+    if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>setLogo(String(reader.result||''),f.name);
+    reader.readAsDataURL(f);
+  });
+  $('removeLogo').addEventListener('click',()=>setLogo());
+
+  // Google Maps / Places integration is optional. Never allow a mapping
+  // initialization problem to prevent the core IMPS controls from loading.
+  try {
+    // Google Maps / Places integration. All Google calls are user-triggered or debounced
+  // autocomplete calls. Reopening a saved incident does not recalculate routes.
+  setTimeout(refreshGoogleStatus,400);
+  wirePlaceAutocomplete($('originAddress'),$('originSuggestions'),place=>{
+    $('originAddress').value=place.address||place.name||'';
+    if(!$('originName').value.trim()) $('originName').value=place.name||'';
+    $('originAddress').dataset.placeLat=Number.isFinite(place.lat)?String(place.lat):'';
+    $('originAddress').dataset.placeLon=Number.isFinite(place.lon)?String(place.lon):'';
+    $('originAddress').dataset.placeId=place.placeId||'';
+    $('originAddress').dataset.placeSource=place.source||'';
+    $('originMapStatus').textContent=`Origin selected from ${place.source||'place search'}. Existing hospital times remain saved until you choose Calculate.`;
+  });
+  $('originAddress').addEventListener('input',()=>{
+    delete $('originAddress').dataset.placeLat;delete $('originAddress').dataset.placeLon;delete $('originAddress').dataset.placeId;delete $('originAddress').dataset.placeSource;
+    document.querySelectorAll('[data-hospital] [data-calc-status]').forEach(x=>{if(x.textContent)x.textContent='Origin changed — recalculate transport times when ready.'});
+  });
+  $('selectOriginGoogleMap').addEventListener('click',openOriginMapPicker);
+  $('cancelGoogleMapPicker').addEventListener('click',closeOriginMapPicker);
+  $('closeGoogleMapPicker').addEventListener('click',closeOriginMapPicker);
+  $('useMyLocation').addEventListener('click',centerMapOnMyLocation);
+  $('googleMapPicker').addEventListener('click',e=>{ if(e.target===$('googleMapPicker')) closeOriginMapPicker(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('googleMapPicker').classList.contains('hidden')) closeOriginMapPicker(); });
+  $('useGoogleMapPoint').addEventListener('click',()=>{
+    if(!originPickerPoint)return;
+    const {lat,lon}=originPickerPoint;
+    $('originAddress').value=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    $('originAddress').dataset.placeLat=String(lat);$('originAddress').dataset.placeLon=String(lon);
+    $('originAddress').dataset.placeId='';$('originAddress').dataset.placeSource='Google Map';
+    $('originMapStatus').textContent='Origin selected directly on Google Map. Existing transport times remain unchanged until recalculated.';
+    closeOriginMapPicker();
+    document.querySelectorAll('[data-hospital] [data-calc-status]').forEach(x=>{if(x.textContent)x.textContent='Origin changed — recalculate transport times when ready.'});
+  });
+
+
+  } catch (err) {
+    console.error("Google mapping initialization was skipped:", err);
+    const mappingStatus = $('googleMappingStatus');
+    if (mappingStatus) mappingStatus.textContent = `Google mapping unavailable: ${err?.message || err}. Core IMPS functions remain available.`;
+  }
+
+
+  function activateTab(name){
+    document.querySelectorAll('.app-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tabPanel===name));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.app-tab').forEach(btn=>btn.addEventListener('click',()=>activateTab(btn.dataset.tab)));
+
+  function cardHasMeaningfulData(card){
+    if(!card) return false;
+    const controls=[...card.querySelectorAll('input,select,textarea')];
+    return controls.some(el=>{
+      if(el.type==='checkbox' || el.type==='radio') return el.checked;
+      const value=String(el.value||'').trim();
+      return value!=='' && value!=='Select Yes or No';
+    });
+  }
+
+  function updateTabCounts(){
+    const setCount=(selector,countSelector)=>{
+      const target=document.querySelector(countSelector);
+      if(!target)return;
+      const count=[...document.querySelectorAll(selector)].filter(cardHasMeaningfulData).length;
+      target.textContent=count ? `(${count})` : '';
+    };
+    setCount('#groundList [data-ground]','[data-count-ground]');
+    setCount('#airList [data-air]','[data-count-air]');
+    setCount('#hospitalList [data-hospital]','[data-count-hospitals]');
+    const divisionCount=[...document.querySelectorAll('[data-division]')].filter(card=>String(card.querySelector('[data-field="name"]')?.value||'').trim()).length;
+    const divisionTarget=document.querySelector('[data-count-divisions]');
+    if(divisionTarget)divisionTarget.textContent=divisionCount ? `(${divisionCount})` : '';
+    setCount('#locationList [data-location]','[data-count-locations]');
+  }
+  const tabCountObserver=new MutationObserver(updateTabCounts);
+  ['groundList','airList','hospitalList','divisionList','branchList','locationList'].forEach(id=>{
+    const el=$(id);if(el)tabCountObserver.observe(el,{childList:true,subtree:true});
+  });
+  setTimeout(updateTabCounts,0);
+  document.addEventListener('input',e=>{
+    if(e.target.closest('[data-ground],[data-air],[data-hospital],[data-division],[data-location]')) updateTabCounts();
+  });
+  document.addEventListener('change',e=>{
+    if(e.target.closest('[data-ground],[data-air],[data-hospital],[data-division],[data-location]')) updateTabCounts();
+  });
+
+
+  $('openMappingSettings')?.addEventListener('click',()=>$('mappingSettingsModal')?.classList.remove('hidden'));
+  $('closeMappingSettings')?.addEventListener('click',()=>$('mappingSettingsModal')?.classList.add('hidden'));
+  $('mappingSettingsModal')?.addEventListener('click',e=>{if(e.target===$('mappingSettingsModal'))$('mappingSettingsModal').classList.add('hidden')});
+
+  ['opStartTime','opEndTime'].forEach(id=>{
+    $(id).addEventListener('input',e=>{
+      e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+    });
+  });
+
+  $('btnCalcAllHospitals').addEventListener('click',calculateAllHospitals);
+  $('btnAddGround').addEventListener('click',()=>createGround());
+  $('btnAddAir').addEventListener('click',()=>createAir());
+  $('btnAddHospital').addEventListener('click',()=>createHospital());
+  $('btnAddDivision').addEventListener('click',()=>createStandaloneDivision());
+  $('btnAddBranch').addEventListener('click',()=>createBranch());
+  $('branchList').addEventListener('click',e=>{ if(e.target.matches('[data-remove]')) setTimeout(refreshBranchMoveControls,0); });
+  $('btnAddLocation').addEventListener('click',()=>createLocation());
+  $('btnReview').addEventListener('click',reviewData);
+  $('btnSave').addEventListener('click',saveJson);
+  $('btnLoad').addEventListener('click',()=>$('loadFile').click());
+
+  $('loadFile').addEventListener('change',async()=>{
+    const f=$('loadFile').files[0]; if(!f)return;
+    try{ loadData(JSON.parse(await f.text())); }
+    catch(e){
+      console.error(e);
+      window.IMPSShowNotice?.(`Could not load the JSON file: ${e.message}`);
+    }
+    $('loadFile').value='';
+  });
+
+  document.querySelectorAll('input[name="branchesUsed"]').forEach(r=>r.addEventListener('change',e=>{
+    const yes=e.target.value==='yes';
+    if(yes){
+      const existing=[...$('divisionList').querySelectorAll(':scope > [data-division]')];
+      let first=document.querySelector('[data-branch]');
+      if(!first) first=createBranch({}, {noDefaultDivision:true});
+      const target=first.querySelector('[data-divisions]');
+      existing.forEach(card=>target.appendChild(card));
+      if(!target.querySelector('[data-division]')) target.appendChild(divisionCard('Division 1',{},''));
+    }else{
+      const all=[...document.querySelectorAll('#branchList [data-division]')];
+      all.forEach(card=>$('divisionList').appendChild(card));
+      $('branchList').innerHTML='';
+      counts.branch=0;
+    }
+    $('noBranchMode').classList.toggle('hidden',yes);
+    $('branchMode').classList.toggle('hidden',!yes);
+    [...document.querySelectorAll('[data-division]')].forEach(card=>card._refreshTitle?.());
+    refreshBranchMoveControls();
+  }));
+
+  document.addEventListener('click',e=>{
+    if(e.target?.id==='cancelGoogleHospitalReview'){
+      markHospitalGoogleReviewCompleted(googleHospitalReviewState?.el);
+      $('googleHospitalReviewModal')?.classList.add('hidden');
+      googleHospitalReviewState=null;
+      if(importedHospitalReviewRunning) setTimeout(reviewNextImportedHospital,0);
+      return;
+    }
+
+    if(e.target?.id==='applyGoogleHospitalReview'){
+      if(!googleHospitalReviewState)return;
+      const selected=new Set(
+        [...document.querySelectorAll('#googleHospitalReviewGrid [data-google-review-field]:checked')]
+          .map(x=>x.dataset.googleReviewField)
+      );
+      const target=googleHospitalReviewState.el;
+      const place=googleHospitalReviewState.place;
+      applyGoogleHospitalValues(target,place,selected);
+      markHospitalGoogleReviewCompleted(target);
+
+      const status=target?.querySelector?.('[data-calc-status]');
+      if(status){
+        const count=selected.size;
+        status.textContent=`Google review completed. Applied ${count} selected value${count===1?'':'s'}.`;
+        status.classList.remove('error');
+        status.classList.add('success');
+      }
+
+      $('googleHospitalReviewModal')?.classList.add('hidden');
+      googleHospitalRecalcTarget=target;
+      googleHospitalReviewState=null;
+
+      // After accepting Google information, ask separately whether imported/manual
+      // transport-time overrides should be cleared and recalculated.
+      $('googleHospitalRecalcModal')?.classList.remove('hidden');
+      return;
+    }
+
+    if(e.target?.id==='keepTransportOverride'){
+      $('transportOverrideModal')?.classList.add('hidden');
+      transportOverridePromptState=null;
+      return;
+    }
+
+    if(e.target?.id==='useCalculatedTransportTime'){
+      $('transportOverrideModal')?.classList.add('hidden');
+      const state=transportOverridePromptState;
+      transportOverridePromptState=null;
+      if(state?.el){
+        const target=state.el;
+        if(state.clearGround){
+          const toggle=target.querySelector('[data-field="groundOverrideEnabled"]');
+          if(toggle) toggle.checked=false;
+          target.querySelector('[data-field="groundTimeMin"]').value=formatTravelTime(target.dataset.calculatedGround);
+        }
+        if(state.clearAir){
+          const toggle=target.querySelector('[data-field="airOverrideEnabled"]');
+          if(toggle) toggle.checked=false;
+          if(value(target,'helipad')!=='No'){
+            target.querySelector('[data-field="airTimeMin"]').value=formatTravelTime(target.dataset.calculatedAir);
+          }
+        }
+        const status=target.querySelector('[data-calc-status]');
+        if(status){
+          status.textContent='Calculated transport time applied.';
+          status.classList.remove('error');
+          status.classList.add('success');
+        }
+      }
+      return;
+    }
+
+    if(e.target?.id==='transportOverrideModal'){
+      $('transportOverrideModal')?.classList.add('hidden');
+      transportOverridePromptState=null;
+      return;
+    }
+
+    if(e.target?.id==='keepExistingGoogleHospitalTimes'){
+      $('googleHospitalRecalcModal')?.classList.add('hidden');
+      const target=googleHospitalRecalcTarget;
+      googleHospitalRecalcTarget=null;
+      const status=target?.querySelector?.('[data-calc-status]');
+      if(status){
+        status.textContent='Google information applied. Existing transport times kept.';
+        status.classList.remove('error');
+        status.classList.add('success');
+      }
+      if(importedHospitalReviewRunning) setTimeout(reviewNextImportedHospital,0);
+      return;
+    }
+
+    if(e.target?.id==='recalculateGoogleHospitalTimes'){
+      $('googleHospitalRecalcModal')?.classList.add('hidden');
+      const target=googleHospitalRecalcTarget;
+      googleHospitalRecalcTarget=null;
+      if(target){
+        const groundOverride=target.querySelector('[data-field="groundOverrideEnabled"]');
+        const airOverride=target.querySelector('[data-field="airOverrideEnabled"]');
+        if(groundOverride) groundOverride.checked=false;
+        if(airOverride) airOverride.checked=false;
+
+        const status=target.querySelector('[data-calc-status]');
+        if(status){
+          status.textContent='Recalculating transport times using the Google hospital location…';
+          status.classList.remove('error');
+          status.classList.remove('success');
+        }
+        calculateHospital(target);
+      }
+      if(importedHospitalReviewRunning) setTimeout(reviewNextImportedHospital,0);
+      return;
+    }
+
+    if(e.target?.id==='googleHospitalRecalcModal'){
+      // Clicking the backdrop is treated conservatively: keep the existing times.
+      $('googleHospitalRecalcModal')?.classList.add('hidden');
+      const target=googleHospitalRecalcTarget;
+      googleHospitalRecalcTarget=null;
+      const status=target?.querySelector?.('[data-calc-status]');
+      if(status){
+        status.textContent='Google information applied. Existing transport times kept.';
+        status.classList.remove('error');
+        status.classList.add('success');
+      }
+      if(importedHospitalReviewRunning) setTimeout(reviewNextImportedHospital,0);
+      return;
+    }
+
+    if(e.target?.id==='googleHospitalReviewModal'){
+      markHospitalGoogleReviewCompleted(googleHospitalReviewState?.el);
+      $('googleHospitalReviewModal')?.classList.add('hidden');
+      googleHospitalReviewState=null;
+      if(importedHospitalReviewRunning) setTimeout(reviewNextImportedHospital,0);
+    }
+  });
+
+  window.IMPS = {
+    collect,
+    loadData,
+    reviewData,
+    startImportedHospitalReview
+  };
+
+  createGround();
+  createAir();
+  createHospital();
+  createStandaloneDivision();
+  createLocation();
+})();
+</script>
+
+
+<div id="googleHospitalReviewModal" class="validation-modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="validation-modal" style="max-width:980px">
+    <h2 id="googleHospitalReviewTitle">Review Google information</h2>
+    <div class="small">Google values are selected by default. Any field that differs from the imported IMPS value is highlighted. Uncheck anything you want to keep exactly as imported, then choose Use selected Google values.</div>
+    <div id="googleHospitalReviewGrid" class="google-review-grid"></div>
+    <div class="google-review-actions">
+      <button type="button" id="cancelGoogleHospitalReview">Cancel</button>
+      <button type="button" id="applyGoogleHospitalReview" class="primary">Use selected Google values</button>
+    </div>
+  </div>
+</div>
+
+<div id="transportOverrideModal" class="validation-modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="validation-modal" style="max-width:560px">
+    <h2>Use calculated transport time?</h2>
+    <div id="transportOverrideCalculatedValue" class="small" style="margin-top:8px"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:18px;gap:10px">
+      <button type="button" id="keepTransportOverride">No</button>
+      <button type="button" id="useCalculatedTransportTime" class="primary">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div id="googleHospitalRecalcModal" class="validation-modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="validation-modal" style="max-width:650px">
+    <h2>Recalculate transport times?</h2>
+    <div class="row" style="justify-content:flex-end;margin-top:18px;gap:10px">
+      <button type="button" id="keepExistingGoogleHospitalTimes">No</button>
+      <button type="button" id="recalculateGoogleHospitalTimes" class="primary">Yes</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="pdfPreviewModal" class="pdf-preview-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pdfPreviewTitle">
+  <div class="pdf-preview-shell">
+    <div class="pdf-preview-toolbar">
+      <div>
+        <h2 id="pdfPreviewTitle">ICS-206 Preview</h2>
+        <div id="pdfPreviewStatus" class="small">Browser preview may vary slightly from Microsoft Word. Generate ICS-206 downloads the editable Word document.</div>
+      </div>
+      <div class="row">
+        <button type="button" id="pdfZoomOut">−</button>
+        <span id="pdfZoomLabel" class="small" style="min-width:52px;text-align:center">Fit Width</span>
+        <button type="button" id="pdfZoomIn">+</button>
+        <button type="button" id="pdfFitWidth">Fit Width</button>
+        <button type="button" id="closePdfPreview">Close Preview</button>
+        <button type="button" id="generateFromPreview" class="primary">Generate ICS-206</button>
+      </div>
+    </div>
+    <div id="docxPreviewViewport" class="pdf-preview-frame" aria-label="ICS-206 document preview"><div id="docxPreviewContent"></div></div>
+  </div>
+</div>
+
+<div id="validationModal" class="validation-modal-backdrop hidden"><div class="validation-modal"><h2>IMPS needs more information</h2><div id="validationModalText"></div><ul id="validationModalList"></ul><div class="row" style="justify-content:flex-end"><button type="button" id="validationModalClose" class="primary">OK</button></div></div></div></body>
+</html>

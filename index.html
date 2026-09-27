@@ -196,7 +196,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
   <section id="appToolbar" class="card" style="border-top:5px solid #1f2937;background:#ffffff" style="position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.08)">
     <div class="toolbar">
       <div>
-        <h2 style="margin:0">IMPS Web v0.1.1</h2>
+        <h2 style="margin:0">IMPS Web v0.1.2</h2>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px;font-style:italic">Created by Jeff Childers</div>
       </div>
       <div class="row">
@@ -227,6 +227,15 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
       Your incident is saved on this device and the Word ICS-206 is generated in this browser.
       Download an incident backup regularly. Clearing this browser’s site data removes its local saved copy.
       Address and route searches use IMPS online mapping services only when you use those features.
+    </span>
+  </section>
+
+  <section class="card" style="border-left:6px solid #b45309;background:#fffbeb">
+    <strong>Document &amp; printing note:</strong>
+    <span class="small" style="color:inherit">
+      IMPS Word documents are optimized for Microsoft Word. For best formatting, open the generated .docx in Microsoft Word.
+      For printing or sharing a fixed-layout copy, print from Microsoft Word or export/save the document as a PDF and print the PDF.
+      Browser and mobile document previews may display or scale the page differently.
     </span>
   </section>
 
@@ -406,6 +415,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
     <div class="toolbar">
       <div>
         <h2 style="margin:0">Incident Actions</h2>
+        <div class="small" style="margin-top:4px;max-width:520px">Best results: open the generated document in Microsoft Word. Print from Word, or export/save to PDF and print the PDF.</div>
       </div>
       <div class="row">
         <span id="bottomSaveState" class="save-state unsaved" role="status" aria-live="polite">Unsaved incident</span>
@@ -2301,7 +2311,7 @@ window.addEventListener('unhandledrejection', function(e) {
     <div class="pdf-preview-toolbar">
       <div>
         <h2 id="pdfPreviewTitle">ICS-206 Preview</h2>
-        <div id="pdfPreviewStatus" class="small">Browser preview may vary slightly from Microsoft Word. Generate ICS-206 downloads the editable Word document.</div>
+        <div id="pdfPreviewStatus" class="small">Browser preview may vary from Microsoft Word. For best formatting and printing, open the generated document in Microsoft Word or export/save it to PDF and print the PDF.</div>
       </div>
       <div class="row">
         <button type="button" id="pdfZoomOut">−</button>

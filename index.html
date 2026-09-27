@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f4e78">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IMPS">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <title>IMPS Web — ICS-206 Builder</title>
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--text:#1f2937;--muted:#6b7280;--border:#d1d5db;--accent:#1f4e78}
@@ -124,6 +131,49 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
 .modal-backdrop.hidden{display:none}
 .modal-card{width:min(100%,520px);background:#fff;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
 
+
+/* IMPS mobile/PWA enhancements. Desktop rules above remain unchanged. */
+@media (max-width:720px){
+  html{overflow-x:hidden}
+  body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+  main{padding:10px max(10px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  .card{padding:14px;margin:10px 0;border-radius:10px}
+  .subcard{padding:11px}
+  input,select,textarea{font-size:16px;min-height:44px;padding:10px}
+  textarea{min-height:88px}
+  button,.app-tab,summary{min-height:44px;touch-action:manipulation}
+  .row{flex-wrap:wrap}
+  #appToolbar .toolbar{display:block}
+  #appToolbar .toolbar>div:first-child{margin-bottom:10px}
+  #appToolbar .toolbar>.row{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #appToolbar .toolbar>.row>button{width:100%;margin:0}
+  #appGenerateWord{grid-column:1/-1}
+  #moreMenu{grid-column:1/-1;width:100%}
+  #moreMenu>summary{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 12px}
+  #moreMenu>div{left:0!important;right:0!important;top:48px!important;min-width:0!important;width:100%!important}
+  .settings-row{margin:8px 0}
+  .settings-row button{min-width:110px}
+  .app-tabs{margin-left:-10px;margin-right:-10px;padding:8px 10px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .app-tab{padding:9px 12px}
+  .toolbar{gap:10px}
+  .toolbar>.row{width:100%}
+  .toolbar>.row>button{flex:1 1 140px}
+  .validation-modal-backdrop,.modal-backdrop,.pdf-preview-backdrop{padding:10px}
+  .validation-modal,.modal-card{padding:16px;max-height:92vh;overflow:auto}
+  .pdf-preview-shell{width:100vw;height:100dvh;border-radius:0}
+  .pdf-preview-toolbar{padding:8px;flex-wrap:wrap}
+  .pdf-preview-toolbar .row{width:auto}
+  #docxPreviewContent{min-height:70vh}
+  .google-review-grid{grid-template-columns:30px 110px minmax(150px,1fr) minmax(150px,1fr);overflow-x:auto}
+  .place-suggestions{max-height:40vh}
+}
+
+/* Touch targets improve on tablets without changing the desktop layout. */
+@media (pointer:coarse){
+  button,.app-tab,summary{min-height:44px}
+  input,select,textarea{min-height:44px}
+}
+
 </style>
   <script type="module" crossorigin src="./assets/index-CUewl9xn.js"></script>
 </head>
@@ -146,7 +196,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
   <section id="appToolbar" class="card" style="border-top:5px solid #1f2937;background:#ffffff" style="position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.08)">
     <div class="toolbar">
       <div>
-        <h2 style="margin:0">IMPS Web v0.1.0</h2>
+        <h2 style="margin:0">IMPS Web v0.1.1</h2>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px;font-style:italic">Created by Jeff Childers</div>
       </div>
       <div class="row">
@@ -2266,5 +2316,13 @@ window.addEventListener('unhandledrejection', function(e) {
   </div>
 </div>
 
-<div id="validationModal" class="validation-modal-backdrop hidden"><div class="validation-modal"><h2>IMPS needs more information</h2><div id="validationModalText"></div><ul id="validationModalList"></ul><div class="row" style="justify-content:flex-end"><button type="button" id="validationModalClose" class="primary">OK</button></div></div></div></body>
+<div id="validationModal" class="validation-modal-backdrop hidden"><div class="validation-modal"><h2>IMPS needs more information</h2><div id="validationModalText"></div><ul id="validationModalList"></ul><div class="row" style="justify-content:flex-end"><button type="button" id="validationModalClose" class="primary">OK</button></div></div></div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
 </html>

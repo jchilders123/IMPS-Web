@@ -196,7 +196,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#f9fafb;
   <section id="appToolbar" class="card" style="border-top:5px solid #1f2937;background:#ffffff" style="position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.08)">
     <div class="toolbar">
       <div>
-        <h2 style="margin:0">IMPS Web v0.1.6</h2>
+        <h2 style="margin:0">IMPS Web v0.1.7</h2>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px;font-style:italic">Created by Jeff Childers</div>
       </div>
       <div class="row">
@@ -2334,7 +2334,17 @@ window.addEventListener('unhandledrejection', function(e) {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    let refreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshed && !sessionStorage.getItem('imps-sw-reloaded-v017')) {
+        refreshed = true;
+        sessionStorage.setItem('imps-sw-reloaded-v017', '1');
+        location.reload();
+      }
+    });
+    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'})
+      .then(reg => reg.update())
+      .catch(() => {});
   });
 }
 </script>

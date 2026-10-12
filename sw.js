@@ -1,13 +1,9 @@
-const CACHE_NAME = 'imps-web-v0.1.6';
+const CACHE_NAME = 'imps-web-v0.1.7';
+const CACHE_PREFIX = 'imps-web-v';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './assets/index-v016.js',
-  './assets/generator-worker-v016.js',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png'
+  './', './index.html', './manifest.webmanifest',
+  './assets/index-v016.js', './assets/generator-worker-v016.js',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {
@@ -16,33 +12,52 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never reuse a previously cached Python document generator: this file
-  // defines the Word output and must match the displayed web release.
-  if (url.pathname.startsWith(new URL('./generator/', self.location.href).pathname)) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+  // A new visit should load the latest published application, not an old app shell.
+  // Offline support remains available through the cached shell.
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(request, {cache: 'no-store'});
+        if (!fresh.ok) throw new Error('Navigation HTTP ' + fresh.status);
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put('./index.html', fresh.clone());
+        return fresh;
+      } catch (err) {
+        const cache = await caches.open(CACHE_NAME);
+        return (await cache.match('./index.html')) || (await cache.match('./')) || Response.error();
+      }
+    })());
     return;
   }
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        if (response && response.status === 200) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      });
-    })
-  );
+
+  // Never cache the Python document generator or service-worker script.
+  const generatorPath = new URL('./generator/', self.location.href).pathname;
+  if (url.pathname.startsWith(generatorPath) || url.pathname === new URL('./sw.js', self.location.href).pathname) {
+    event.respondWith(fetch(request, {cache:'no-store'}));
+    return;
+  }
+
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  })());
 });

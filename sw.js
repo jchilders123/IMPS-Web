@@ -1,8 +1,8 @@
-const CACHE_NAME = 'imps-web-v0.1.7';
+const CACHE_NAME = 'imps-web-v0.1.8';
 const CACHE_PREFIX = 'imps-web-v';
 const APP_SHELL = [
   './', './index.html', './manifest.webmanifest',
-  './assets/index-v016.js', './assets/generator-worker-v016.js',
+  './assets/index-v018.js', './assets/generator-worker-v018.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
 ];
 

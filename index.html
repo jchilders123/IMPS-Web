@@ -560,12 +560,16 @@ window.addEventListener('unhandledrejection', function(e) {
       if(el)el.textContent=googleConfigured?'IMPS online mapping available — Places and Routes ready.':'IMPS online mapping unavailable — offline/manual workflow remains available.';
     }catch{googleConfigured=false;if(el)el.textContent='IMPS online mapping unavailable.'}
   }
+  function cleanGoogleAddress(value){
+    // Remove only a trailing country component; preserve the rest of the address.
+    return String(value||'').trim().replace(/,?\s*(?:USA|United States(?: of America)?)\s*$/i,'').replace(/,\s*$/,'').trim();
+  }
   function normalizePlaceDetails(raw){
     const d=typeof raw==='string'?JSON.parse(raw):raw;
     return {
       placeId:d.placeId||d.id||'',
       name:d.name||d.displayName?.text||'',
-      address:d.address||d.formattedAddress||'',
+      address:cleanGoogleAddress(d.address||d.formattedAddress||''),
       phone:d.phone||d.nationalPhoneNumber||'',
       lat:Number(d.lat ?? d.location?.latitude),
       lon:Number(d.lon ?? d.location?.longitude),
@@ -581,7 +585,7 @@ window.addEventListener('unhandledrejection', function(e) {
       placeId:x.placeId||'',
       text:x.text||x.mainText||x.placeId||'',
       name:x.mainText||x.text||'',
-      address:x.secondaryText||'',
+      address:cleanGoogleAddress(x.secondaryText||''),
       source:x.source||'Google'
     })).filter(x=>x.placeId);
   }
@@ -630,7 +634,7 @@ window.addEventListener('unhandledrejection', function(e) {
     const box=el.querySelector('[data-address-suggestions]');
     if(!input || !box)return;
     wirePlaceAutocomplete(input,box,place=>{
-      const address=String(place?.address||place?.name||'').trim();
+      const address=cleanGoogleAddress(place?.address||place?.name||'');
       if(address){
         input.value=address;
         input.dispatchEvent(new Event('change',{bubbles:true}));

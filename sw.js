@@ -1,10 +1,10 @@
-const CACHE_NAME = 'imps-web-v0.1.5';
+const CACHE_NAME = 'imps-web-v0.1.6';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './assets/index-CUewl9xn.js',
-  './assets/generator-worker-C78AxXnt.js',
+  './assets/index-v016.js',
+  './assets/generator-worker-v016.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
@@ -29,7 +29,7 @@ self.addEventListener('fetch', event => {
 
   // Never reuse a previously cached Python document generator: this file
   // defines the Word output and must match the displayed web release.
-  if (url.pathname.endsWith('/generator/generate_ics206.py')) {
+  if (url.pathname.startsWith(new URL('./generator/', self.location.href).pathname)) {
     event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
